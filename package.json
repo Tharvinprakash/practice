@@ -2,15 +2,24 @@
   "name": "node",
   "version": "1.0.0",
   "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/Tharvinprakash/practice#readme",
+  "bugs": {
+    "url": "https://github.com/Tharvinprakash/practice/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tharvinprakash/practice.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "express": "^5.1.0",
     "git": "^0.1.5",
