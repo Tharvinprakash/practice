@@ -18,7 +18,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "migrate" : "npx knex migrate:latest",
+    "seed" : "npx knex seed:run",
+    "rollback" : "npx knex migrate:rollback --all"
   },
   "dependencies": {
     "express": "^5.1.0",
