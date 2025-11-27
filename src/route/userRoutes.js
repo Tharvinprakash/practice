@@ -7,6 +7,7 @@ const userController = require('../controller/userController');
 route.use(express.json());
 
 route.post('/register', userController.register);
+route.post('/login',userController.login);
 
 route.get('/users',userController.getUsers);
 route.get("/users/:id",userController.getUserById);

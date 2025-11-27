@@ -1,9 +1,11 @@
 const express = require('express');
 const knex = require('../../config/db');
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 
 function validation(name, email, password) {
     error = {}
-    
+
     if (name.length < 6) {
         error.name = "name length atleast 6";
     }
@@ -19,21 +21,51 @@ function validation(name, email, password) {
     return error;
 }
 
+function loginValid(email, password) {
+
+}
+
 exports.register = async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     const { name, email, password } = req.body;
     const error = validation(name, email, password);
     // console.log(Object.keys(error).length);
     const errLength = Object.keys(error).length;
-    if(errLength > 0){
+    if (errLength > 0) {
         res.status(400).send(error);
     }
+    const hashed = await bcrypt.hash(password, 10);
     await knex('users').insert({
         name: name,
         email: email,
-        password: password
+        password: hashed
     });
     res.status(200).json({ message: "User registered successfully!" })
+}
+
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await knex('users').where({ email: email.trim().toLowerCase() }).first();
+    if (!user) {
+        res.status(404).json({ message: "email not exist" });
+    }
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+        res.status(404).json({ message: "invalid password" });
+    }
+    const token = jwt.sign({
+        id: user.id,
+        email: user.email
+    }, process.env.JWT_SECRET, {
+        expiresIn: '24h'
+    }
+    );
+
+    res.status(200).json({
+        token: token,
+        message: "user Loginned"
+    });
 }
 
 exports.getUsers = async (req, res) => {

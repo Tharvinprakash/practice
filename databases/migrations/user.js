@@ -2,7 +2,7 @@ const knex = require('../../config/db');
 
 exports.up = async (knex) => {
     await knex.schema.createTable("users",(table) => {
-        table.increments("id").primary(),
+        table.increments("role_id").primary(),
         table.string("name").notNullable(),
         table.string("email").unique().notNullable(),
         table.string("password").notNullable(),
