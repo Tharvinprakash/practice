@@ -20,7 +20,8 @@
     "dev": "nodemon server.js",
     "migrate": "npx knex migrate:latest",
     "seed": "npx knex seed:run",
-    "rollback": "npx knex migrate:rollback --all"
+    "rollback": "npx knex migrate:rollback --all",
+    "fresh": "npx knex migrate:rollback --all && npx knex migrate:latest && npx knex seed:run"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -28,10 +29,12 @@
     "env": "^0.0.2",
     "express": "^5.1.0",
     "git": "^0.1.5",
+    "google-auth-library": "^10.5.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.11",
     "nodemon": "^3.1.11"
   }
 }
