@@ -2,75 +2,27 @@ const express = require('express');
 const knex = require('../../config/db');
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
+require("dotenv").config()
 
-function validation(name, email, password) {
-    error = {}
 
-    if (name.length < 6) {
-        error.name = "name length atleast 6";
+exports.delete = async (req, res) => {
+    let user;
+    try {
+        user = await knex('users').where({ id: req.params.id }).first();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
     }
-    const validateEmailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-
-    if (validateEmailRegex.test(email)) {
-        error.email = "email is invalid";
+    catch (err) {
+        console.log(err);
     }
-
-    if (password.length < 8) {
-        error.password = "password length atleast 8";
-    }
-    return error;
-}
-
-function loginValid(email, password) {
-
-}
-
-exports.register = async (req, res) => {
-    // console.log(req.body);
-    const { name, email, password } = req.body;
-    const error = validation(name, email, password);
-    // console.log(Object.keys(error).length);
-    const errLength = Object.keys(error).length;
-    if (errLength > 0) {
-        res.status(400).send(error);
-    }
-    const hashed = await bcrypt.hash(password, 10);
-    await knex('users').insert({
-        name: name,
-        email: email,
-        password: hashed
-    });
-    res.status(200).json({ message: "User registered successfully!" })
-}
-
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
-    const user = await knex('users').where({ email: email.trim().toLowerCase() }).first();
-    if (!user) {
-        res.status(404).json({ message: "email not exist" });
-    }
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-        res.status(404).json({ message: "invalid password" });
-    }
-    const token = jwt.sign({
-        id: user.id,
-        email: user.email
-    }, process.env.JWT_SECRET, {
-        expiresIn: '24h'
-    }
-    );
-
-    res.status(200).json({
-        token: token,
-        message: "user Loginned"
-    });
+    await knex('users').where({ id: req.params.id }).del();
+    return res.status(200).json({ message: "user deleted" });
 }
 
 exports.getUsers = async (req, res) => {
     const users = await knex('users').select('*');
-    res.send(users);
+    return res.send(users);
 }
 
 exports.getUserById = async (req, res) => {
@@ -78,13 +30,13 @@ exports.getUserById = async (req, res) => {
     try {
         user = await knex('users').where({ id: req.params.id }).first();
         if (!user) {
-            res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
     }
     catch (err) {
         console.log(err);
     }
-    res.send(user);
+    return res.send(user);
 }
 
 exports.updateUser = async (req, res) => {
@@ -92,7 +44,7 @@ exports.updateUser = async (req, res) => {
     try {
         user = await knex('users').where({ id: req.params.id }).first();
         if (!user) {
-            res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
     }
     catch (err) {
@@ -112,7 +64,7 @@ exports.updateUser = async (req, res) => {
         password: userPassword
     })
 
-    res.status(200).json({ message: "User updated" });
+    return res.status(200).json({ message: "User updated" });
 }
 
 exports.deleteById = async (req, res) => {
@@ -120,14 +72,14 @@ exports.deleteById = async (req, res) => {
     try {
         user = await knex('users').where({ id: req.params.id }).first();
         if (!user) {
-            res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
     }
     catch (err) {
         console.log(err);
     }
     await knex('users').where({ id: req.params.id }).del();
-    res.status(200).json({ message: "user deleted" });
+    return res.status(200).json({ message: "user deleted" });
 }
 
 

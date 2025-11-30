@@ -10,7 +10,7 @@ exports.up = async(knex) => {
             .onDelete("CASCADE")
         table.integer("permission_id")
             .unsigned()
-            .references("permission_id")
+            .references("id")
             .inTable("permissions")
             .onDelete("CASCADE")
         table.boolean("value").notNullable()
