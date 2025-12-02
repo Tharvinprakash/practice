@@ -13,6 +13,9 @@ route.get("/:id",categoryController.getCategoryById);
 route.put("/update/:id", categoryController.updateCategory);
 route.delete("/delete/:id",categoryController.deleteById);
 
+route.get("/search/:name", categoryController.searchCategory);
+
+
 module.exports = route;
 
 

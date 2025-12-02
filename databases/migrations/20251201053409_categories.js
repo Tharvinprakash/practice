@@ -8,6 +8,7 @@ exports.up = async(knex) => {
         table.string("description").notNullable();
         table.boolean("is_active").notNullable();      
         table.boolean("is_delete").notNullable();      
+        table.timestamps(true,true);
     });
 }
 

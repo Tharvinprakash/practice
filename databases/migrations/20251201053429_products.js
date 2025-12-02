@@ -21,6 +21,7 @@ exports.up = async(knex) => {
         table.boolean("is_delete").notNullable();      
         table.string("ratings");
         table.string("reviews");
+        table.timestamps(true,true);
     });
 }
 

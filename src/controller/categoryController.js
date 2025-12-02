@@ -2,6 +2,7 @@ const express = require('express');
 const knex = require('../../config/db');
 const slugify = require('slugify');
 
+
 function validation(name, description, is_active, is_delete) {
     let error = {};
 
@@ -125,6 +126,25 @@ exports.deleteById = async(req,res) => {
         return res.status(200).json({message: "category deleted"});
     } catch (error) {
         return res.status(400).json({message: "error while deleting category"})
+    }
+}
+
+exports.searchCategory = async(req,res) => {
+    const categoryName = req.params.name;
+    console.log(categoryName)
+    let category;
+    try {
+        category = await knex("categories")
+                        .where('name','like',`%${categoryName.toLowerCase()}%`)
+                        .select("*");
+        console.log(category);
+        if(category.length == 0){
+            return res.status(404).json({message: "No search result"});
+        }
+        return res.status(200).send(category);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({message: "Error while searching category"});
     }
 }
 

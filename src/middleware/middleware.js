@@ -60,6 +60,9 @@ async function permissionCheck(req, res, next, permissions) {
     res.status(403).json({ message: "Unauthorized to create staff" });
   }
 }
+
+
+
 module.exports = {
   verifyToken,
   permissionCheck,

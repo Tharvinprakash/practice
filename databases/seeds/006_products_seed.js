@@ -5,7 +5,7 @@ exports.seed = async (knex) => {
         {
             name: "VIVO",
             name_slug: "vivo",
-            image: "imgurl1",
+            image: "/uploads/vivo.jpg",
             description: "Vivo 5G Charger in the Box (Lily White, 128 GB)  (6 GB RAM)",
             marked_price: 10000.00,
             purchased_price: 7000.00,
@@ -20,7 +20,7 @@ exports.seed = async (knex) => {
         {
             name: "OPPO",
             name_slug: "oppo",
-            image: "imgurl2",
+            image: "/uploads/oppo.jpg",
             description: "Oppo 5G Charger in the Box (Lily White, 128 GB)  (6 GB RAM)",
             marked_price: 15000.00,
             purchased_price: 10000.00,
@@ -35,7 +35,7 @@ exports.seed = async (knex) => {
         {
             name: "ACER",
             name_slug: "acer",
-            image: "imgurl3",
+            image: "/uploads/acer.jpg",
             description: "Acer 5G Charger in the Box (Lily White, 128 GB)  (6 GB RAM)",
             marked_price: 50000.00,
             purchased_price: 47000.00,
@@ -50,7 +50,7 @@ exports.seed = async (knex) => {
         {
             name: "PC",
             name_slug: "pc",
-            image: "imgurl4",
+            image: "/uploads/pc.jpg",
             description: "PC 5G Charger in the Box (Lily White, 128 GB)  (6 GB RAM)",
             marked_price: 80000.00,
             purchased_price: 70000.00,
@@ -65,7 +65,7 @@ exports.seed = async (knex) => {
         {
             name: "NOKIA",
             name_slug: "nokia",
-            image: "imgurl5",
+            image: "/uploads/nokia.jpg",
             description: "nokia is a mobile phone",
             marked_price: 1000.00,
             purchased_price: 500.00,
