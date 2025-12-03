@@ -23,9 +23,9 @@ const upload = multer({
     }
 })
 
-const uploadMultiple = multer({
-    storage: storage
-})
+// const uploadMultiple = multer({
+//     storage: storage
+// })
 
 
 function checkFileType(file,cb){
@@ -42,7 +42,7 @@ function checkFileType(file,cb){
     }
 }
 
-module.exports = {upload,uploadMultiple};
+module.exports = {upload};
 
 
 

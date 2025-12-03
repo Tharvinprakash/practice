@@ -14,6 +14,7 @@ route.put("/update/:id", categoryController.updateCategory);
 route.delete("/delete/:id",categoryController.deleteById);
 
 route.get("/search/:name", categoryController.searchCategory);
+route.get("/sort/:asc",categoryController.sortByCategoryName);
 
 
 module.exports = route;

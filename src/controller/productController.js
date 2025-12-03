@@ -3,7 +3,7 @@ const knex = require('../../config/db');
 const slugify = require('slugify');
 
 function validation(name, image, description, marked_price, purchased_price,
-    selling_price, category, stock, is_active, is_delete,ratings,reviews) {
+    selling_price, category, stock, is_active, is_delete, ratings, reviews) {
 
     let error = {};
 
@@ -39,29 +39,29 @@ function validation(name, image, description, marked_price, purchased_price,
         error.stock = "stock can't be empty";
     }
 
-    
+
     // if (typeof is_active !== "boolean") {
     //     error.is_active = "is active must be true or false";
     // }
-    
+
     // if (typeof is_delete !== "boolean") {
     //     error.is_delete = "is delete must be true or false";
     // }
-    
-    if(ratings.length < 0){
+
+    if (ratings.length < 0) {
         error.ratings = "ratings can't be empty";
     }
 
-    if(reviews < 0){
+    if (reviews < 0) {
         error.reviews = "reviews can't be empty";
     }
 
     return error;
 }
 
-exports.uploadCheck = async(req,res) => {
-    if(!req.file){
-        return res.status(400).json({message: "upload file is missing"})
+exports.uploadCheck = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: "upload file is missing" })
     }
 
     const imgUrl = `/uploads/${req.file.filename}`
@@ -72,17 +72,17 @@ exports.uploadCheck = async(req,res) => {
 }
 
 exports.addProduct = async (req, res) => {
-    console.log("request",req.body)
+    console.log("request", req.body)
     // console.log("request image",req.image);
-    console.log("request file",req.file);
+    console.log("request file", req.file);
     // console.log("request file.filename",req.file.filename);
-    
 
-    const { name,image,description, marked_price, purchased_price,
+
+    const { name, image, description, marked_price, purchased_price,
         selling_price, category, stock, is_active, is_delete, ratings, reviews
     } = req.body;
 
-    const error = validation(name, image,description, marked_price, purchased_price,
+    const error = validation(name, image, description, marked_price, purchased_price,
         selling_price, category, stock, is_active, is_delete, ratings, reviews);
 
     const errLength = Object.keys(error).length;
@@ -207,43 +207,88 @@ exports.deleteById = async (req, res) => {
     }
 }
 
-exports.filterByCategory = async(req,res) => {
+exports.filterByCategory = async (req, res) => {
     let categoryName = req.params.name;
 
     let category;
     try {
         category = await knex("products as p")
-                    .leftJoin("categories as c","p.category","c.id")
-                    .where("c.name",categoryName)
-                    .select("*")
+            .leftJoin("categories as c", "p.category", "c.id")
+            .where("c.name", categoryName)
+            .select("*")
         console.log(category);
-        if(!category){
-            return res.status(404).json({message: "No items in this category"});
+        if (!category) {
+            return res.status(404).json({ message: "No items in this category" });
         }
         return res.status(200).send(category);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while filtering category"});
+        return res.status(400).json({ message: "Error while filtering category" });
     }
 }
 
-exports.searchProduct = async(req,res) => {
+exports.searchProduct = async (req, res) => {
     const productName = req.params.name;
     console.log(productName)
     let product;
     try {
         product = await knex("products")
-                        .where('name','like',`%${productName.toLowerCase()}%`)
-                        .select("*");
+            .where('name', 'like', `%${productName.toLowerCase()}%`)
+            .select("*");
         // console.log(product);
-        if(product.length == 0){
-            return res.status(404).json({message: "No search result"});
+        if (product.length == 0) {
+            return res.status(404).json({ message: "No search result" });
         }
         return res.status(200).send(product);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while searching product"});
+        return res.status(400).json({ message: "Error while searching product" });
     }
 }
+
+exports.pagination = async (req, res) => {
+
+    let page = parseInt(req.query.page);
+    let limit = parseInt(req.query.limit);
+    
+    if(!page){
+        let defaultPage = 1;
+        page = Math.max(page,defaultPage);
+    }
+
+    const defaultLimit = 5;
+    limit = Math.min(limit,defaultLimit);
+
+
+    try {
+        let products = await knex('products').paginate({ perPage: limit, currentPage: page });
+        if (!products) {
+            return res.status(404).json({ message: "products not found" });
+        }
+        return res.status(200).send(products);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: "Error while pagination on products" })
+    }
+
+}
+
+exports.sortByProductName = async(req,res) => {
+    let op = (req.params.asc).toLowerCase();
+    console.log(op);
+    if(op != 'asc' && op != 'desc'){
+        op = 'asc';
+    }
+    try {
+        let products = await knex("products").select("*")
+                .orderBy('name',`${op}`);
+        console.log(products);
+        return res.status(200).send(products);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({message: "Error while sorting"});
+    }
+}
+
 
 

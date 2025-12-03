@@ -148,3 +148,19 @@ exports.searchCategory = async(req,res) => {
     }
 }
 
+exports.sortByCategoryName = async(req,res) => {
+    let op = (req.params.asc).toLowerCase();
+    console.log(op);
+    if(op != 'asc' && op != 'desc'){
+        op = 'asc';
+    }
+    try {
+        let products = await knex("categories").select("*")
+                .orderBy('name',`${op}`);
+        console.log(products);
+        return res.status(200).send(products);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({message: "Error while sorting"});
+    }
+}
