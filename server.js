@@ -9,6 +9,7 @@ const categoryRoutes = require("./src/route/categoryRoutes")
 const productRoutes = require("./src/route/productRoutes")
 const taxRoutes = require('./src/route/taxRoutes')
 const paymentRoutes = require('./src/route/paymentRoutes')
+const orderRoutes = require('./src/route/OrderRoutes')
 
 const PORT = 3000;
 dontenv.config();
@@ -27,6 +28,7 @@ app.use("/product", productRoutes);
 
 app.use("/tax",taxRoutes)
 app.use("/payment",paymentRoutes)
+app.use("/order",orderRoutes);
 
 app.listen(PORT, () => console.log(`App is running on ${PORT}`));
 

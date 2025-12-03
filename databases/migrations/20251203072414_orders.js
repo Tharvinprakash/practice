@@ -21,7 +21,7 @@ exports.up = async (knex) => {
         table.integer("payment_id").unsigned()
             .references("id")
             .inTable("payment_modes");
-        table.boolean("is_paid");
+        table.enu("is_paid",["paid","partially_paid","unpaid"]);
         table.decimal("grand_total");
         table.timestamps(true, true);
     })
