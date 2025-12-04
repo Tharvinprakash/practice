@@ -16,27 +16,54 @@ function validation(
     error.user_id = "user_id required";
   }
 
-  if (products.length != 0) {
+  if (products.length === 0) {
     error.products = "Atleast 1 item needed to be in product";
   }
+
+  products.map((product) => {
+    if(!product.id){
+      error.id = "product id required"
+    }
+
+    if(product.name.length < 2){
+      error.name = "product name length atleast 2"
+    }
+
+    if(!product.quantity){
+      error.quantity = "product quantity required"
+    }
+
+    if(!product.price){
+      error.price = "product price required"
+    }
+    // await knex("products").where({})
+    // if(product.price ){
+
+    // }
+
+    if(!product.subTotal){
+      error.subTotal = "product subTotal required"
+    }
+
+  });
 
   if (!staff_id) {
     error.staff_id = "staff_id required";
   }
 
-  if (!discount) {
+  if (discount === undefined) {
     error.discount = "discount required";
   }
 
-  if (!tax_id) {
+  if (tax_id === undefined) {
     error.tax_id = "tax_id required";
   }
 
-  if (!payment_id) {
+  if (payment_id === undefined) {
     error.tax_id = "payment_id required";
   }
 
-  if (!is_paid) {
+  if (is_paid === undefined) {
     error.is_paid = "is_paid required";
   }
 
@@ -44,15 +71,17 @@ function validation(
 }
 
 function generateInvoiceNumber() {
-  const invoice_number = "INV_" + knex.fn.now();
+  const invoice_number = "INV_" + Date.now();
   console.log(invoice_number);
   return invoice_number;
 }
 
 exports.create = async (req, res) => {
+  // console.log(req.user)
   const staff_id = req.user.id;
+  // console.log(staff_id)
   const { user_id, products, discount, tax_id, payment_id, is_paid } = req.body;
-
+  
   const error = validation(
     user_id,
     products,
@@ -62,6 +91,7 @@ exports.create = async (req, res) => {
     payment_id,
     is_paid
   );
+  const trx = await knex.transaction();
 
   const errLength = Object.keys(error).length;
   if (errLength > 0) {
@@ -74,18 +104,17 @@ exports.create = async (req, res) => {
     0
   );
   const discountAmount = (discount / 100) * subTotal;
-  const tax_percent = await knex("order as o")
-    .leftJoin("tax as t", "o.id", "t.id")
-    .where("t.id", tax_id)
-    .select("t.percent");
-  console.log("tax amount", tax_amount);
-  const tax_amount = (tax_percent / 100) * subTotal;
+  const taxRow = await trx("tax").where({id: tax_id}).first(); 
+  console.log("tax row", taxRow);
+  const tax_amount = (taxRow.percent / 100) * subTotal;
+  console.log("tax_amount", tax_amount);
 
   const grand_total = subTotal + tax_amount - discountAmount;
   const invoice_number = generateInvoiceNumber();
 
+
   try {
-    const [orderId] = await knex("orders").insert({
+    const [orderId] = await trx("orders").insert({
       invoice_number: invoice_number,
       user_id: user_id,
       staff_id: staff_id,
@@ -93,7 +122,7 @@ exports.create = async (req, res) => {
       quantity: quantity,
       subTotal: subTotal,
       tax_id: tax_id,
-      tax_percent: tax_percent,
+      tax_percent: taxRow.percent,
       tax_amount: tax_amount,
       payment_id: payment_id,
       is_paid: is_paid,
@@ -104,11 +133,13 @@ exports.create = async (req, res) => {
       order_id: orderId,
       quantity: product.quantity,
       price: product.price,
-      subTotal: product.subTotal,
+      subTotal: product.subTotal
     }));
-    await knex("order_items").insert(order_items);
+    await trx("order_items").insert(order_items);
+    await trx.commit()
     return res.status(200).json({ message: "Order Added" });
   } catch (error) {
+    await trx.rollback()
     console.log(error);
     return res.status(400).json({ message: "Error while add order" });
   }

@@ -17,6 +17,7 @@ exports.up = async (knex) => {
             .references("id")
             .inTable("tax")
             .onDelete("CASCADE");
+        table.decimal("tax_percent");
         table.integer("tax_amount");
         table.integer("payment_id").unsigned()
             .references("id")

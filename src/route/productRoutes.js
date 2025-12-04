@@ -8,7 +8,7 @@ const productController = require("../controller/productController")
 
 route.post('/upload', upload.upload.single("image"),productController.uploadCheck);
 // route.post('/uploadMultiple', upload.uploadMultiple.array("image",5),
-//                             productController.uploadMultipleFileCheck);
+// productController.uploadMultipleFileCheck);
 
 route.post("/add",productController.addProduct);
 route.get("/", productController.getProduct);

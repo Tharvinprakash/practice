@@ -10,10 +10,13 @@ const productRoutes = require("./src/route/productRoutes")
 const taxRoutes = require('./src/route/taxRoutes')
 const paymentRoutes = require('./src/route/paymentRoutes')
 const orderRoutes = require('./src/route/OrderRoutes')
+const stripeRoutes = require('./src/route/stripeRoutes');
+const { json } = require('stream/consumers');
 
 const PORT = 3000;
 dontenv.config();
 
+app.use("/stripe-payment/webhook",express.raw({type: "application/json"}))
 app.use(express.json());
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -30,28 +33,13 @@ app.use("/tax",taxRoutes)
 app.use("/payment",paymentRoutes)
 app.use("/order",orderRoutes);
 
+app.use("/stripe-payment",stripeRoutes);
+
 app.listen(PORT, () => console.log(`App is running on ${PORT}`));
 
 
 
-// Read documentation about knex-paginate and implemented pagination for both products and categories with limit
-// Implemented sorting ascending and descending on both products and categories
-// created order,order items,tax,payment mode tables on migration
-// seeded the data for tax & payments
-// create crud operations on both tax & payment mode
 
 
-// Reviewed and applied the knex-paginate documentation to implement pagination with dynamic limit support for both products and categories.
-
-// Added sorting functionality for both ascending and descending order on products and categories.
-
-// Created migration files for orders, order items, tax, and payment mode tables.
-
-// Seeded initial data for tax and payment modes.
-
-// Implemented complete CRUD operations for both tax and payment mode modules.
-
-
-
-
+ 
 

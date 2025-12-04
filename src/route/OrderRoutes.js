@@ -4,8 +4,10 @@ const route = express.Router();
 
 const orderController = require("../controller/orderController");
 
-route.post("/create",orderController.create)
+const { verifyToken } = require('../middleware/middleware');
 
+
+route.post("/create",verifyToken,orderController.create)
 
 
 module.exports = route;

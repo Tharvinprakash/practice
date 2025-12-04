@@ -1,6 +1,7 @@
 const express = require('express');
 const knex = require('../../config/db');
 
+
 function validation(name, type){
     let error = {};
 
@@ -116,3 +117,4 @@ exports.delete = async (req, res) => {
         return res.status(400).json({ message: "error while deleting payment" })
     }
 }
+
