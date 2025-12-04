@@ -9,7 +9,7 @@ route.post("/create-payment",stripeController.createCheckoutSession);
 
 route.post("/webhook", webhookController.stripeWebHooks);
 route.get("/checkStripe",webhookController.CheckStripe)
-route.get("/payment-success:id",webhookController.getPaymentSuccess);
+route.get("/payment-success",webhookController.getPaymentSuccess);
 route.get("/payment-failed",webhookController.getPaymentFail);
 
 module.exports=route;

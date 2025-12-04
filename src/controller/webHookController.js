@@ -1,9 +1,11 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const knex = require("../../config/db");
 
+const jwt = require('jsonwebtoken');
+require("dotenv").config();
 
 exports.stripeWebHooks = async (req, res) => {
-    console.log("STrip", req.body)
+    console.log("strip", req.body)
     const sig = req.headers["stripe-signature"];
 
     let event;
@@ -50,9 +52,21 @@ exports.CheckStripe = async (req, res) => {
 
 exports.getPaymentSuccess = async (req, res) => {
     console.log(req.params.id);
+    let userId,orderId;
     try {
-        const{user_id,order_id} = req.params.id;
-        await knex("orders").where({id: order_id}).update({
+        const{token} = req.query;
+        if(!token){
+            return res.status(400).json({message: "token is missing"});
+        }
+        try {
+            const {user_id,order_id} =  jwt.verify(token, process.env.JWT_SECRET);
+            userId = user_id;
+            orderId = order_id;
+        } catch (error) {
+            return res.status(400).json({message: "Jwt error while payment"})
+        }
+        
+        await knex("orders").where({id: orderId}).update({
             is_paid: true
         });
     } catch (error) {
@@ -63,6 +77,7 @@ exports.getPaymentSuccess = async (req, res) => {
 }
 
 exports.getPaymentFail = async (req, res) => {
+    const {user_id,order_id} = jwt.verify(token, process.env.JWT_SECRET);
     return res.json({ message: "payment failed" });
 }
 

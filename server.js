@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express();
-const dontenv = require('dotenv')
+const dotenv = require('dotenv')
 const path = require('path')
 
 const authRoutes = require("./src/route/authRoutes")
@@ -14,7 +14,7 @@ const stripeRoutes = require('./src/route/stripeRoutes');
 const { json } = require('stream/consumers');
 
 const PORT = 3000;
-dontenv.config();
+dotenv.config();
 
 app.use("/stripe-payment/webhook",express.raw({type: "application/json"}))
 app.use(express.json());

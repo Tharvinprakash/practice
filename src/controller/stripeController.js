@@ -1,11 +1,26 @@
 const express = require('express');
 const { string } = require('joi');
 
+const jwt = require('jsonwebtoken');
+
 const route = express.Router();
 
 require("dotenv").config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+function generateToken(user_id,order_id){
+    const token = jwt.sign({
+        user_id: user_id,
+        order_id: order_id
+    },
+    process.env.JWT_SECRET,{
+        expiresIn : '24h'
+    }
+    );
+    return token;
+}
+
 
 exports.createCheckoutSession = async (req, res) => {
     try {
@@ -17,6 +32,8 @@ exports.createCheckoutSession = async (req, res) => {
         if (!amount || isNaN(amount) || amount <= 0) {
             return res.status(400).json({ message: "amount is invalid" });
         }
+
+        const token = generateToken(user_id,order_id);
     
         const amountInCents = Math.round(amount * 100);
     
@@ -38,7 +55,7 @@ exports.createCheckoutSession = async (req, res) => {
                 user_id,
                 order_id
             },
-            success_url: `http://localhost:3000/stripe-payment/payment-success?user_id=${user_id}&order_id=${order_id}`,
+            success_url: `http://localhost:3000/stripe-payment/payment-success?token=${token}`,
             cancel_url: "http://localhost:3000/stripe-payment/payment-failed"
         });
         console.log(session)
@@ -48,6 +65,7 @@ exports.createCheckoutSession = async (req, res) => {
         return res.status(400).json({message: error.message});
     }
 }
+
 
 // http://localhost:3000/stripe-payment/webhook
 
