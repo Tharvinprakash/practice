@@ -11,7 +11,8 @@ exports.seed = async (knex) => {
             purchased_price: 7000.00,
             selling_price: 8000.00,
             category: 2,
-            stock: 10,
+            unit_type: 3,
+            min_quantity: 5,
             is_active: true,
             is_delete: false,
             ratings: "5",
@@ -26,7 +27,8 @@ exports.seed = async (knex) => {
             purchased_price: 10000.00,
             selling_price: 12000.00,
             category: 2,
-            stock: 7,
+            unit_type: 3,
+            min_quantity: 5,
             is_active: true,
             is_delete: false,
             ratings: "3",
@@ -41,7 +43,8 @@ exports.seed = async (knex) => {
             purchased_price: 47000.00,
             selling_price: 49000.00,
             category: 3,
-            stock: 45,
+            unit_type: 3,
+            min_quantity: 7,
             is_active: true,
             is_delete: false,
             ratings: "4",
@@ -56,7 +59,8 @@ exports.seed = async (knex) => {
             purchased_price: 70000.00,
             selling_price: 79000.00,
             category: 4,
-            stock: 5,
+            unit_type: 3,
+            min_quantity: 3,
             is_active: true,
             is_delete: false,
             ratings: "2",
@@ -71,7 +75,8 @@ exports.seed = async (knex) => {
             purchased_price: 500.00,
             selling_price: 800.00,
             category: 1,
-            stock: 18,
+            unit_type: 3,
+            min_quantity: 15,
             is_active: true,
             is_delete: false,
             ratings: "5",
@@ -79,6 +84,3 @@ exports.seed = async (knex) => {
         }
     ]);
 }
-
-
-

@@ -11,6 +11,10 @@ const taxRoutes = require('./src/route/taxRoutes')
 const paymentRoutes = require('./src/route/paymentRoutes')
 const orderRoutes = require('./src/route/OrderRoutes')
 const stripeRoutes = require('./src/route/stripeRoutes');
+const unitRoutes = require('./src/route/unitRoutes');
+const supplierRoutes = require('./src/route/unitRoutes');
+const inventoryRoutes = require('./src/route/inventoryRoutes');
+
 const { json } = require('stream/consumers');
 
 const PORT = 3000;
@@ -34,12 +38,9 @@ app.use("/payment",paymentRoutes)
 app.use("/order",orderRoutes);
 
 app.use("/stripe-payment",stripeRoutes);
+app.use("/unit",unitRoutes);
+app.use("/supplier",supplierRoutes);
+app.use("/inventory",inventoryRoutes);
 
 app.listen(PORT, () => console.log(`App is running on ${PORT}`));
-
-
-
-
-
- 
 

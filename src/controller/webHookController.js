@@ -27,7 +27,7 @@ exports.stripeWebHooks = async (req, res) => {
 
         try {
             await knex("orders").where({ id: orderId }).update({
-                is_paid: true
+                is_paid: paid
             })
             console.log("order paid ", orderId);
         } catch (error) {

@@ -22,7 +22,8 @@ exports.up = async (knex) => {
         table.integer("payment_id").unsigned()
             .references("id")
             .inTable("payment_modes");
-        table.enu("is_paid",["paid","partially_paid","unpaid"]);
+        table.enu("order_status",["order","refund"]);
+        table.enu("is_paid",["paid","partially_paid","unpaid","refund"]);
         table.decimal("grand_total");
         table.timestamps(true, true);
     })
@@ -31,4 +32,5 @@ exports.up = async (knex) => {
 exports.down = async (knex) => {
     await knex.schema.dropTableIfExists("orders");
 };
+
 

@@ -25,8 +25,3 @@ exports.down = async (knex) => {
 
 
 
-
-
-
-
-

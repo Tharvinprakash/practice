@@ -18,3 +18,4 @@ exports.seed = async (knex) => {
         }
     ])
 }
+

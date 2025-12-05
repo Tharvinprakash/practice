@@ -41,7 +41,6 @@ function validation(
     }
     // await knex("products").where({})
     // if(product.price ){
-
     // }
 
     if (!product.subTotal) {
