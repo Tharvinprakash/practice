@@ -3,15 +3,18 @@ const express = require('express')
 const route = express.Router();
 
 const unitController = require("../controller/unitController");
+const { verifyToken,permissionCheck } = require("../middleware/middleware");
 
 
-route.post("/add", unitController.addUnit);
-route.get("/", unitController.getUnits);
-route.get("/:id",unitController.getUnitById);
-route.put("/update/:id", unitController.updateUnit);
-route.delete("/delete/:id",unitController.deleteById);
+route.post("/add",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"), unitController.addUnit);
+route.get("/",verifyToken, unitController.getUnits);
+route.get("/:id",verifyToken,unitController.getUnitById);
+route.put("/update/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"), unitController.updateUnit);
+route.delete("/delete/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.delete"),unitController.deleteById);
 
 module.exports=route;
+
+
 
 /*
 

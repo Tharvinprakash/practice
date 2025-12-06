@@ -1,11 +1,13 @@
 const express = require("express");
 const knex = require("../../config/db");
 
+
 function validation(
   product_id,
   supplier_id,
-  //   inventory_id,
-  invoice_number,
+  tax_id,
+  grand_total,
+  payment_due_date,
   is_available,
   quantity,
   payment_type,
@@ -24,20 +26,21 @@ function validation(
     error.supplier_id = "supplier id required";
   }
 
-  //   if (!inventory_id) {
-  //     error.inventory_id = "inventory id required";
-  //   }
-
-  //   if (!invoice_number) {
-  //     error.invoice_number = "invoice number is required";
-  //   }
-
-  if (!is_available) {
-    error.is_available = "is available is required";
-  }
 
   if (!quantity) {
     error.quantity = "quantity is required";
+  }
+
+  if (!tax_id) {
+    error.tax_id = "tax id required"
+  }
+
+  if (!grand_total) {
+    error.grand_total = "grand total is required"
+  }
+
+  if (!payment_due_date) {
+    error.payment_due_date = "payment due date is required"
   }
 
   if (!payment_type) {
@@ -59,6 +62,8 @@ function validation(
   if (!actual_arrival_date) {
     error.actual_arrival_date = "actual arrival date is required";
   }
+
+  return error;
 }
 
 function generateInvoiceNumber() {
@@ -71,7 +76,9 @@ exports.addInventory = async (req, res) => {
   const {
     product_id,
     supplier_id,
-    // inventory_id,
+    tax_id,
+    grand_total,
+    payment_due_date,
     invoice_number,
     is_available,
     quantity,
@@ -85,9 +92,10 @@ exports.addInventory = async (req, res) => {
   const error = validation(
     product_id,
     supplier_id,
-    // inventory_id,
+    tax_id,
+    grand_total,
+    payment_due_date,
     invoice_number,
-    is_available,
     quantity,
     payment_type,
     order_type,
@@ -108,17 +116,17 @@ exports.addInventory = async (req, res) => {
       product_id: product_id,
       supplier_id: supplier_id,
     });
-    let invoice_number;
+    let invoice_number = generateInvoiceNumber();
 
-    if (invoice_number === undefined || !invoice_number) {
-      invoice_number = generateInvoiceNumber();
-    }
 
     await trx("inventory_items").insert({
       inventory_id: inventory_id,
       invoice_number: invoice_number,
       is_available: is_available,
       quantity: quantity,
+      tax_id: tax_id,
+      grand_total: grand_total,
+      payment_due_date: payment_due_date,
       payment_type: payment_type,
       order_type: order_type,
       payment_status: payment_status,
@@ -126,7 +134,7 @@ exports.addInventory = async (req, res) => {
       actual_arrival_date: actual_arrival_date,
     });
 
-    trx.commit();
+    await trx.commit();
     return res.status(200).json({ message: "inventory added" });
   } catch (error) {
     await trx.rollback();
@@ -136,106 +144,138 @@ exports.addInventory = async (req, res) => {
 };
 
 exports.getInventory = async (req, res) => {
-  let suppliers = await knex("suppliers").select("*");
+  let suppliers = await knex("inventory_items").select("*");
   return res.status(200).send(suppliers);
 };
 
 exports.getInventoryById = async (req, res) => {
-  let supplierId = req.params.id;
+  let inventoryId = req.params.id;
 
-  if (!supplierId) {
-    return res.status(400).json({ message: "supplierId is missing" });
+  if (!inventoryId) {
+    return res.status(400).json({ message: "inventoryId is missing" });
   }
 
   try {
-    let supplier = await knex("suppliers").where({ id: supplierId });
-    if (!supplier) {
-      return res.status(404).json({ message: "supplier is not found" });
+    let inventory = await knex("suppliers").where({ id: inventoryId });
+    if (!inventory) {
+      return res.status(404).json({ message: "inventory is not found" });
     }
-    return res.status(200).send(supplier);
+    return res.status(200).send(inventory);
   } catch (error) {
     console.log(error);
-    return res.status(400).json({ message: "Error while get supplier" });
+    return res.status(400).json({ message: "Error while get inventory" });
   }
 };
 
 exports.updateInventory = async (req, res) => {
-  let supplierId = req.params.id;
+  let inventoryId = req.params.id;
 
   const {
-    name,
-    phone_no,
-    email,
-    address,
-    city,
-    state,
-    gst_number,
-    referred_staff,
-    created_by,
-    updated_by,
+    product_id,
+    supplier_id,
+    tax_id,
+    grand_total,
+    payment_due_date,
+    invoice_number,
+    is_available,
+    quantity,
+    payment_type,
+    order_type,
+    payment_status,
+    expected_arrival_date,
+    actual_arrival_date,
   } = req.body;
 
   const error = validation(
-    name,
-    phone_no,
-    email,
-    address,
-    city,
-    state,
-    gst_number,
-    referred_staff,
-    created_by,
-    updated_by
+    product_id,
+    supplier_id,
+    tax_id,
+    grand_total,
+    payment_due_date,
+    invoice_number,
+    quantity,
+    payment_type,
+    order_type,
+    payment_status,
+    expected_arrival_date,
+    actual_arrival_date
   );
   const errLength = Object.keys(error).length;
   if (errLength > 0) {
     return res.status(400).send(error);
   }
+  const trx = await knex.transaction();
 
-  if (!supplierId) {
-    return res.status(400).json({ message: "supplierId is missing" });
+  if (!inventoryId) {
+    return res.status(400).json({ message: "inventoryId is missing" });
   }
 
   try {
-    let supplier = await knex("suppliers").where({ id: supplierId }).first();
-    if (!supplier) {
-      return res.status(404).json({ message: "supplier is not found" });
+    let inventory = await trx("inventory").where({ id: inventoryId }).first();
+    if (!inventory) {
+      return res.status(404).json({ message: "inventory is not found" });
     }
-    await knex("suppliers").where({ id: unitId }).update({
-      name: name,
-      phone_no: phone_no,
-      email: email,
-      address: address,
-      city: city,
-      state: state,
-      gst_number: gst_number,
-      referred_staff: referred_staff,
-      created_by: created_by,
-      updated_by: updated_by,
+    await trx("inventory").where({ id: inventoryId }).update({
+      product_id: product_id,
+      supplier_id: supplier_id,
     });
-    return res.status(200).json({ message: "supplier updated" });
+    await trx("inventory_items").where({ id: inventoryId }).update({
+      tax_id,
+      grand_total,
+      payment_due_date,
+      invoice_number,
+      is_available,
+      quantity,
+      payment_type,
+      order_type,
+      payment_status,
+      expected_arrival_date,
+      actual_arrival_date
+    });
+    trx.commit();
+    return res.status(200).json({ message: "inventory updated" });
   } catch (error) {
+    trx.rollback();
     console.log(error);
-    return res.status(400).json({ message: "Error while updating supplier" });
+    return res.status(400).json({ message: "Error while updating inventory" });
   }
 };
 
 exports.deleteById = async (req, res) => {
-  let supplierId = req.params.id;
-  if (!supplierId) {
-    return res.status(400).json({ message: "supplierId missing" });
+  const inventoryId = req.params.id;
+
+  if (!inventoryId) {
+    return res.status(400).json({ message: "inventoryId missing" });
   }
-  let supplier;
+
+  const trx = await knex.transaction();
+
   try {
-    supplier = await knex("suppliers").where({ id: supplierId }).first();
-    if (!supplier) {
-      return res.status(404).json({ message: "supplier is not found" });
+    const inventory = await trx("inventory")
+      .where({ id: inventoryId })
+      .first();
+
+    if (!inventory) {
+      await trx.rollback();
+      return res.status(404).json({ message: "Inventory not found" });
     }
-    if (supplier) {
-      await knex("suppliers").where({ id: supplierId }).del();
-    }
-    return res.status(200).json({ message: "supplier deleted" });
+
+    await trx("inventory_items")
+      .where({ inventory_id: inventoryId })  
+      .del();
+
+    await trx("inventory").where({ id: inventoryId }).del();
+
+    await trx.commit();
+
+    return res.status(200).json({ message: "Inventory deleted successfully" });
+
   } catch (error) {
-    return res.status(400).json({ message: "error while deleting supplier" });
+    console.log(error);
+    await trx.rollback();
+    return res.status(500).json({
+      message: "Error while deleting inventory",
+      error: error.message,
+    });
   }
 };

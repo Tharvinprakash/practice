@@ -12,7 +12,7 @@ const paymentRoutes = require('./src/route/paymentRoutes')
 const orderRoutes = require('./src/route/OrderRoutes')
 const stripeRoutes = require('./src/route/stripeRoutes');
 const unitRoutes = require('./src/route/unitRoutes');
-const supplierRoutes = require('./src/route/unitRoutes');
+const supplierRoutes = require('./src/route/supplierRoutes');
 const inventoryRoutes = require('./src/route/inventoryRoutes');
 
 const { json } = require('stream/consumers');

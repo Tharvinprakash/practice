@@ -3,20 +3,23 @@ const express = require('express')
 const route = express.Router();
 
 const categoryController = require("../controller/categoryController");
-const { verifyToken } = require("../middleware/middleware");
+const { verifyToken,permissionCheck } = require("../middleware/middleware");
 
 route.use(express.json());
 
-route.post("/add", categoryController.addCategory);
-route.get("/", categoryController.getCategory);
-route.get("/:id",categoryController.getCategoryById);
-route.put("/update/:id", categoryController.updateCategory);
-route.delete("/delete/:id",categoryController.deleteById);
+route.post("/add", verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"),categoryController.addCategory);
+route.get("/",verifyToken, categoryController.getCategory);
+route.get("/:id",verifyToken,categoryController.getCategoryById);
+route.put("/update/:id", verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"),categoryController.updateCategory);
+route.delete("/delete/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.delete"),categoryController.deleteById);
 
-route.get("/search/:name", categoryController.searchCategory);
-route.get("/sort/:asc",categoryController.sortByCategoryName);
+route.get("/search/:name",verifyToken, categoryController.searchCategory);
+route.get("/sort/:asc",verifyToken,categoryController.sortByCategoryName);
 
 
 module.exports = route;
 
+// route.post('/createAdmin', verifyToken, 
+//     (req, res, next) => permissionCheck(req, res, next, "admin.create"),
+//     authController.register);
 

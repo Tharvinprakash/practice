@@ -106,9 +106,8 @@ exports.deleteById = async (req, res) => {
         if (!unit) {
             return res.status(404).json({ message: "unit is not found" });
         }
-        if (unit) {
-            await knex("products").where({ id: taxId }).del();
-        }
+        await knex("units").where({ id: unitId }).del();
+
         return res.status(200).json({ message: "unit deleted" });
     } catch (error) {
         return res.status(400).json({ message: "error while deleting unit" })

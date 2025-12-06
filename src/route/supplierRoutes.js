@@ -3,11 +3,13 @@ const express = require('express')
 const route = express.Router();
 
 const supplierController = require("../controller/supplierController");
+const { verifyToken,permissionCheck } = require("../middleware/middleware");
 
-route.post("/add", supplierController.addSupplier);
-route.get("/", supplierController.getSupplier);
-route.get("/:id",supplierController.getSupplierById);
-route.put("/update/:id", supplierController.updateSupplier);
-route.delete("/delete/:id",supplierController.deleteById);
+
+route.post("/add",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"), supplierController.addSupplier);
+route.get("/",verifyToken, supplierController.getSupplier);
+route.get("/:id",verifyToken,supplierController.getSupplierById);
+route.put("/update/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"), supplierController.updateSupplier);
+route.delete("/delete/:id",(req,res,next) => permissionCheck(req, res, next, "admin.delete"),verifyToken,supplierController.deleteById);
 
 module.exports=route;

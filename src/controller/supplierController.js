@@ -182,7 +182,7 @@ exports.updateSupplier = async (req, res) => {
     if (!supplier) {
       return res.status(404).json({ message: "supplier is not found" });
     }
-    await knex("suppliers").where({ id: unitId }).update({
+    await knex("suppliers").where({ id: supplierId }).update({
       name: name,
       phone_no: phone_no,
       email: email,
