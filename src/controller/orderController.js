@@ -140,6 +140,7 @@ exports.create = async (req, res) => {
       is_paid: is_paid,
       grand_total: grand_total,
     });
+    
     let order_items = products.map((product) => ({
       product_id: product.id,
       order_id: orderId,
@@ -147,9 +148,8 @@ exports.create = async (req, res) => {
       price: product.price,
       subTotal: product.subTotal,
     }));
+
     await trx("order_items").insert(order_items);
-
-
 
     if (!grand_total || isNaN(grand_total) || grand_total <= 0) {
       return res.status(400).json({ message: "amount is invalid" });

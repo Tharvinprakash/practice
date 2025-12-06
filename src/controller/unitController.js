@@ -38,7 +38,6 @@ exports.addUnit = async (req, res) => {
         console.log(error);
         return res.status(400).json({ message: "Error while adding unit" });
     }
-
 }
 
 exports.getUnits = async (req, res) => {
@@ -97,5 +96,21 @@ exports.updateUnit = async (req, res) => {
 }
 
 exports.deleteById = async (req, res) => {
-
+    let unitId = req.params.id;
+    if (!unitId) {
+        return res.status(400).json({ message: "unitId missing" });
+    }
+    let unit;
+    try {
+        unit = await knex("units").where({ id: unitId }).first();
+        if (!unit) {
+            return res.status(404).json({ message: "unit is not found" });
+        }
+        if (unit) {
+            await knex("products").where({ id: taxId }).del();
+        }
+        return res.status(200).json({ message: "unit deleted" });
+    } catch (error) {
+        return res.status(400).json({ message: "error while deleting unit" })
+    }
 }
