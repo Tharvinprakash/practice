@@ -1,6 +1,6 @@
 const express = require("express");
 const knex = require("../../config/db");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
@@ -11,7 +11,8 @@ function validation(
   discount,
   tax_id,
   payment_id,
-  is_paid
+  // is_paid,
+  order_status
 ) {
   let error = {};
 
@@ -64,8 +65,12 @@ function validation(
     error.tax_id = "payment_id required";
   }
 
-  if (is_paid === undefined) {
-    error.is_paid = "is_paid required";
+  // if (is_paid === undefined) {
+  //   error.is_paid = "is_paid required";
+  // }
+
+  if (!order_status) {
+    error.order_status = "order status is required";
   }
 
   return error;
@@ -77,24 +82,33 @@ function generateInvoiceNumber() {
   return invoice_number;
 }
 
-function generateToken(user_id,order_id){
-    const token = jwt.sign({
-        user_id: user_id,
-        order_id: order_id
+function generateToken(user_id, order_id) {
+  const token = jwt.sign(
+    {
+      user_id: user_id,
+      order_id: order_id,
     },
-    process.env.JWT_SECRET,{
-        expiresIn : '24h'
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "24h",
     }
-    );
-    return token;
+  );
+  return token;
 }
-
 
 exports.create = async (req, res) => {
   // console.log(req.user)
   const staff_id = req.user.id;
   // console.log(staff_id)
-  const { user_id, products, discount, tax_id, payment_id, is_paid,payment_mode_id } = req.body;
+  const {
+    user_id,
+    products,
+    discount,
+    tax_id,
+    payment_id,
+    payment_mode_id,
+    order_status,
+  } = req.body;
   const error = validation(
     user_id,
     products,
@@ -102,7 +116,8 @@ exports.create = async (req, res) => {
     discount,
     tax_id,
     payment_id,
-    is_paid
+    // is_paid,
+    order_status
   );
   const trx = await knex.transaction();
 
@@ -137,10 +152,11 @@ exports.create = async (req, res) => {
       tax_percent: taxRow.percent,
       tax_amount: tax_amount,
       payment_id: payment_id,
-      is_paid: is_paid,
+      is_paid: "unpaid",
+      order_status: order_status,
       grand_total: grand_total,
     });
-    
+
     let order_items = products.map((product) => ({
       product_id: product.id,
       order_id: orderId,
@@ -181,14 +197,47 @@ exports.create = async (req, res) => {
       cancel_url: "http://localhost:3000/stripe-payment/payment-failed",
     });
     console.log(session);
-    console.log("\nsessionId\n",session.id);
+    console.log("\nsessionId\n", session.id);
 
     await trx("payment_transactions").insert({
       order_id: orderId,
       payment_mode_id: payment_mode_id,
       paid_at: trx.fn.now(),
-      closed_at: trx.fn.now()
-    })
+      closed_at: trx.fn.now(),
+    });
+
+    // products.map((product) => ({
+    //   let existingProduct = trx("products as p")
+    //   .leftJoin("stocks as s","p.id","s.product_id")
+    //   .where("s.product_id",product.id)
+    //   .select("*");
+    //   existingProduct - 1;
+    // }))
+
+    for (const product of products) {
+      let existingProduct = await trx("stocks")
+        .where("product_id", product.id)
+        .first();
+
+      if (!existingProduct) {
+        await trx.rollback();
+        return res
+          .status(404)
+          .json({ message: `product not found ${product.id}` });
+      }
+
+      if (existingProduct.quantity < product.quantity) {
+        await trx.rollback();
+        return res.status(400).json({ message: "stock is low" });
+      }
+     
+      await trx("stocks")
+        .where("product_id", product.id)
+        .update({
+          quantity: existingProduct.quantity - product.quantity,
+        });
+    }
+
     await trx.commit();
     return res.status(200).send(session.url);
   } catch (error) {
@@ -197,4 +246,3 @@ exports.create = async (req, res) => {
     return res.status(400).json({ message: "Error while add order" });
   }
 };
-

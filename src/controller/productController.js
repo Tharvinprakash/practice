@@ -3,7 +3,7 @@ const knex = require('../../config/db');
 const slugify = require('slugify');
 
 function validation(name, image, description, marked_price, purchased_price,
-    selling_price, category, stock, is_active, is_delete, ratings, reviews) {
+    selling_price, category, ratings, reviews) {
 
     let error = {};
 
@@ -33,10 +33,6 @@ function validation(name, image, description, marked_price, purchased_price,
 
     if (!category) {
         error.category = "category can't be empty";
-    }
-
-    if (!stock) {
-        error.stock = "stock can't be empty";
     }
 
 
@@ -74,16 +70,16 @@ exports.uploadCheck = async (req, res) => {
 exports.addProduct = async (req, res) => {
     console.log("request", req.body)
     // console.log("request image",req.image);
-    console.log("request file", req.file);
+    // console.log("request file", req.image);
     // console.log("request file.filename",req.file.filename);
 
 
     const { name, image, description, marked_price, purchased_price,
-        selling_price, category, stock, is_active, is_delete, ratings, reviews
+        selling_price, category, is_active, is_delete, ratings, reviews
     } = req.body;
 
     const error = validation(name, image, description, marked_price, purchased_price,
-        selling_price, category, stock, is_active, is_delete, ratings, reviews);
+        selling_price, category, is_active, is_delete, ratings, reviews);
 
     const errLength = Object.keys(error).length;
     if (errLength > 0) {
@@ -98,7 +94,7 @@ exports.addProduct = async (req, res) => {
         }
         if (!product) {
             console.log(name, slugify(name), image, description, marked_price, purchased_price,
-                selling_price, category, stock, is_active, is_delete, ratings, reviews);
+                selling_price, category, is_active, is_delete, ratings, reviews);
             await knex("products").insert({
                 name: name,
                 name_slug: slugify(name),
@@ -108,7 +104,6 @@ exports.addProduct = async (req, res) => {
                 purchased_price: purchased_price,
                 selling_price: selling_price,
                 category: category,
-                stock: stock,
                 is_active: is_active,
                 is_delete: is_delete,
                 ratings: ratings,

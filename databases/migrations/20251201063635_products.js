@@ -14,8 +14,9 @@ exports.up = async (knex) => {
             .references("id")
             .inTable("categories")
             .onDelete("CASCADE");
-        // table.integer("stock").notNullable()
-        //         .defaultTo(0);
+        table.integer("stock").unsigned().references("id")
+                .inTable("stocks")
+                .onDelete("CASCADE");
         table.integer("unit_type")
             .unsigned()
             .references("id")

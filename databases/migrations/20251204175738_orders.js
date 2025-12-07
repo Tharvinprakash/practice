@@ -23,7 +23,7 @@ exports.up = async (knex) => {
             .references("id")
             .inTable("payment_modes");
         table.enu("order_status",["order","refund"]);
-        table.enu("is_paid",["paid","partially_paid","unpaid","refund"]);
+        table.enu("is_paid",["paid","partially_paid","unpaid","refund"]).defaultTo("unpaid");
         table.decimal("grand_total");
         table.timestamps(true, true);
     })
