@@ -3,12 +3,13 @@ const knex = require("../../config/db");
 
 
 function validation(
+  staff_id,
+  user_id,
   product_id,
   supplier_id,
   tax_id,
   grand_total,
   payment_due_date,
-  is_available,
   quantity,
   payment_type,
   order_type,
@@ -18,17 +19,20 @@ function validation(
 ) {
   let error = {};
 
+  if(!staff_id){
+    error.staff_id = "staff id required";
+  }
+
+  if(!user_id){
+    error.user_id = "user id required";
+  }
+
   if (!product_id) {
     error.product_id = "product id required";
   }
 
   if (!supplier_id) {
     error.supplier_id = "supplier id required";
-  }
-
-
-  if (!quantity) {
-    error.quantity = "quantity is required";
   }
 
   if (!tax_id) {
@@ -41,6 +45,10 @@ function validation(
 
   if (!payment_due_date) {
     error.payment_due_date = "payment due date is required"
+  }
+
+  if (!quantity) {
+    error.quantity = "quantity is required";
   }
 
   if (!payment_type) {
@@ -73,13 +81,14 @@ function generateInvoiceNumber() {
 }
 
 exports.addInventory = async (req, res) => {
+  const staff_id = req.user.id;
   const {
+    user_id,
     product_id,
     supplier_id,
     tax_id,
     grand_total,
     payment_due_date,
-    invoice_number,
     is_available,
     quantity,
     payment_type,
@@ -89,20 +98,23 @@ exports.addInventory = async (req, res) => {
     actual_arrival_date,
   } = req.body;
 
+
   const error = validation(
+    staff_id,
+    user_id,
     product_id,
     supplier_id,
     tax_id,
     grand_total,
     payment_due_date,
-    invoice_number,
-    quantity,
-    payment_type,
-    order_type,
-    payment_status,
-    expected_arrival_date,
-    actual_arrival_date
-  );
+    quantity,               
+    payment_type,           
+    order_type,             
+    payment_status,         
+    expected_arrival_date,  
+    actual_arrival_date     
+);
+
 
   const trx = await knex.transaction();
 
@@ -110,9 +122,15 @@ exports.addInventory = async (req, res) => {
   if (errLength > 0) {
     return res.status(400).send(error);
   }
-
+  // console.log(user_id);
+  // console.log(staff_id);
+  // console.log(product_id);
+  // console.log(supplier_id);
+  
   try {
     let [inventory_id] = await trx("inventory").insert({
+      user_id: user_id,
+      staff_id: staff_id,
       product_id: product_id,
       supplier_id: supplier_id,
     });

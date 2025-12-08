@@ -5,6 +5,10 @@ exports.up = async (knex) => {
                 .inTable("products");
         table.integer("supplier_id").unsigned().references("id")
                 .inTable("suppliers");
+        table.integer("user_id").unsigned().references("id")
+                .inTable("users");
+        table.integer("staff_id").unsigned().references("id")
+                .inTable("users");
     });
 };
 

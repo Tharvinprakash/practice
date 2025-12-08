@@ -14,15 +14,14 @@ exports.up = async (knex) => {
             .references("id")
             .inTable("categories")
             .onDelete("CASCADE");
-        table.integer("stock").unsigned().references("id")
-                .inTable("stocks")
-                .onDelete("CASCADE");
+        // table.integer("stock").unsigned().references("id")
+        //         .inTable("stocks")
+        //         .onDelete("CASCADE");
         table.integer("unit_type")
             .unsigned()
             .references("id")
             .inTable("units")
             .onDelete("CASCADE");
-
         table.integer("min_quantity");
         table.boolean("is_active").notNullable();
         table.boolean("is_delete").notNullable();
