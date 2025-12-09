@@ -97,8 +97,7 @@ exports.totalPurchases = async(req,res) => {
     let totalPurchases = await knex("inventory_items as i")
                             .whereBetween("i.actual_arrival_date",[`${from} 00:00:00`,`${to} 23:59:59`])
                             .sum("i.grand_total as total");
-
-    console.log(totalPurchases);
+    // console.log(totalPurchases);
     return res.status(200).send(totalPurchases);
 }
 

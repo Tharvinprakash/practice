@@ -14,6 +14,10 @@ exports.up = async (knex) => {
             .references("id")
             .inTable("categories")
             .onDelete("CASCADE");
+        table.integer("brand_id").unsigned()
+            .references("id")
+            .inTable("brands")
+            .onDelete("CASCADE");
         // table.integer("stock").unsigned().references("id")
         //         .inTable("stocks")
         //         .onDelete("CASCADE");

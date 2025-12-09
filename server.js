@@ -15,7 +15,9 @@ const unitRoutes = require('./src/route/unitRoutes');
 const supplierRoutes = require('./src/route/supplierRoutes');
 const inventoryRoutes = require('./src/route/inventoryRoutes');
 const stockRoutes = require('./src/route/stockRoutes');
-const dashboardRoutes = require('./src/route/dashboardRoutes')
+const dashboardRoutes = require('./src/route/dashboardRoutes');
+const brandRoutes = require('./src/route/brandRoutes');
+const quotationRoutes = require('./src/route/quotationRoutes');
 
 const { json } = require('stream/consumers');
 
@@ -47,7 +49,15 @@ app.use("/inventory",inventoryRoutes);
 app.use("/stock",stockRoutes);
 
 app.use("/dashboard",dashboardRoutes);
+app.use("/brand",brandRoutes);
 
+app.use("/quotation",quotationRoutes);
 
 app.listen(PORT, () => console.log(`App is running on ${PORT}`));
+
+
+
+
+
+
 

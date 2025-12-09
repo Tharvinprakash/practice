@@ -1,13 +1,17 @@
 const express = require('express')
-
 const route = express.Router();
+const XLSX = require("xlsx");
+
 
 const upload = require("../../util/multer")
 
 const productController = require("../controller/productController")
 const { verifyToken,permissionCheck } = require("../middleware/middleware");
 
-route.post('/upload', upload.upload.single("image"),productController.uploadCheck);
+route.post("/bulk-upload",upload.excelUpload.single("file"),productController.bulkUpload);
+route.post("/upload", upload.upload.single("image"),productController.uploadCheck);
+route.get("/export-products",productController.exportProducts);
+
 // route.post('/uploadMultiple', upload.uploadMultiple.array("image",5),
 // productController.uploadMultipleFileCheck);
 

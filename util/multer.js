@@ -42,7 +42,25 @@ function checkFileType(file,cb){
     }
 }
 
-module.exports = {upload};
+
+
+
+
+const excelStorage = multer.memoryStorage();
+
+const excelUpload = multer({
+    storage: excelStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(xlsx|xls)$/)) {
+            return cb(new Error("Only Excel files are allowed!"), false);
+        }
+        cb(null, true);
+    }
+});
+
+
+module.exports = {upload,excelUpload};
+
 
 
 

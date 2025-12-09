@@ -1,6 +1,7 @@
 const express = require("express");
 const knex = require("../../config/db");
 const jwt = require("jsonwebtoken");
+const XLSX = require('xlsx');
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
@@ -230,7 +231,7 @@ exports.create = async (req, res) => {
         await trx.rollback();
         return res.status(400).json({ message: "stock is low" });
       }
-     
+
       await trx("stocks")
         .where("product_id", product.id)
         .update({
@@ -246,3 +247,141 @@ exports.create = async (req, res) => {
     return res.status(400).json({ message: "Error while add order" });
   }
 };
+
+exports.bulkUpload = async (req, res) => {
+  // console.log(req.file)
+  if (!req.file) {
+    return res.status(404).json({ message: "Excel file is missing" });
+  }
+
+  try {
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    // console.log("workbook", workbook);
+
+    const sheetName = workbook.SheetNames[0];
+    // console.log("sheetName", sheetName);
+
+    const workSheet = workbook.Sheets[sheetName];
+    // console.log("workSheet", workSheet);
+
+    const data = XLSX.utils.sheet_to_json(workSheet);
+    // console.log("data", data);
+
+    const orders = data.map((row) => ({
+      invoice_number: row["invoice_number"],
+      user_id: row["user_id"],
+      staff_id: row["staff_id"],
+      discount: row["discount"],
+      quantity: row["quantity"],
+      subTotal: row["subTotal"],
+      tax_id: row["tax_id"],
+      tax_percent: row["tax_percent"],
+      tax_amount: row["tax_amount"],
+      payment_id: row["payment_id"],
+      is_paid: row["is_paid"],
+      order_status: row["order_status"],
+      grand_total: row["grand_total"],
+    }));
+
+    const orderItems = data.map((row) => ({
+      order_id: row["order_id"],
+      product_id: row["product.id"],
+      order_id: row["orderId"],
+      quantity: row["quantity"],
+      price: row["price"],
+      subTotal: row["subTotal"]
+    }));
+
+
+    await knex.transaction(async (trx) => {
+      for (const order of orders) {
+        await trx("orders").insert(order);
+      }
+    });
+
+    await knex.transaction(async (trx) => {
+      for (const orderItem of orderItems) {
+        await trx("order_items").insert(orderItem);
+      }
+    });
+
+
+    return res.status(200).json({ message: "order imported successfully" });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ message: "Error while import order", error });
+
+  }
+}
+
+exports.exportOrders = async (req, res) => {
+  if (!req.body) {
+    return res.status(404).json({ message: "req cant't be empty" })
+  }
+  try {
+    const orders = await knex("orders as o")
+      .leftJoin("order_items as oi", "oi.order_id", "o.id")
+      .select(
+        "o.invoice_number",
+        "o.user_id",
+        "o.staff_id",
+        "o.discount",
+        "o.quantity",
+        "o.subTotal",
+        "o.tax_id",
+        "o.tax_percent",
+        "o.tax_amount",
+        "o.payment_id",
+        "o.is_paid",
+        "o.order_status",
+        "o.grand_total",
+        "oi.order_id as order_id",
+        "oi.product_id as product_id",
+        "oi.quantity as quantity",
+        "oi.price as price",
+        "oi.subTotal as sub_total"
+      );
+
+    const worksheet = XLSX.utils.json_to_sheet(orders);
+    // console.log("worksheet",worksheet);
+
+    const workbook = XLSX.utils.book_new();
+    // console.log("workbook",workbook);
+
+    const beforeBuffer = XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+    // console.log("beforeBuffer",beforeBuffer);
+
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    // console.log("buffer",buffer);
+
+    res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    return res.send(buffer);
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Error exporting orders', error });
+  }
+}
+
+
+/*
+
+const orders = data.map((row) => ({
+            name: row["name"] || row["Name"],
+            name_slug: row["name_slug"] || null,
+            image: row["image"] || '',
+            description: row["description"] || '',
+            marked_price: row["marked_price"] || 0,
+            purchased_price: row["purchased_price"] || 0,
+            selling_price: row["selling_price"] || 0,
+            category: row["category"] || 1,
+            brand_id: row["brand_id"] || 0,
+            is_active: row["is_active"] !== undefined ? row["is_active"] : 1,
+            is_delete: row["is_delete"] !== undefined ? row["is_delete"] : 0,
+            ratings: row["ratings"] || null,
+            reviews: row["reviews"] || null
+        }));
+
+*/
