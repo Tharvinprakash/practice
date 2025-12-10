@@ -7,6 +7,10 @@ exports.up = async(knex) => {
                 .references("id")
                 .inTable("suppliers")
                 .onDelete("CASCADE");
+        table.integer("product_id").unsigned()
+                .references("id")
+                .inTable("products")
+                .onDelete("CASCADE");
         table.integer("grand_total");
         table.integer("added_by");
         table.integer("discount");

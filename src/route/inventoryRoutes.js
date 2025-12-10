@@ -17,6 +17,6 @@ route.get("/",verifyToken, inventoryController.getInventory);
 route.get("/:id",verifyToken,inventoryController.getInventoryById);
 route.put("/update/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create","staff.create"), inventoryController.updateInventory);
 route.delete("/delete/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.delete","staff.delete"),inventoryController.deleteById);
-
+route.post("/filter",inventoryController.filterInventoryByPaymentStatus);
 
 module.exports=route;

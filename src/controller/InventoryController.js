@@ -365,7 +365,6 @@ exports.bulkUpload = async (req, res) => {
   }
 }
 
-
 exports.exportInventory = async (req, res) => {
   if (!req.body) {
     return res.status(404).json({ message: "req cant't be empty" })
@@ -413,3 +412,8 @@ exports.exportInventory = async (req, res) => {
     return res.status(500).json({ message: 'Error exporting inventories', error });
   }
 }
+
+exports.filterInventoryByPaymentStatus = async(req,res) => {
+  
+}
+
