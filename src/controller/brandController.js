@@ -49,6 +49,9 @@ exports.getBrands = async (req, res) => {
 
 exports.getBrandById = async (req, res) => {
     const brandId = req.params.id;
+    if(!brandId){
+        return res.status(400).json({message: "brand id is missing"})
+    }
     try {
         let brand = await knex("brands").where({ id: brandId }).first();
         return res.status(200).send(brand);
@@ -59,7 +62,11 @@ exports.getBrandById = async (req, res) => {
 
 exports.update = async (req, res) => {
     const brandId = req.params.id;
+    if(!brandId){
+        return res.status(400).json({message: "brand id is missing"})
+    }
     const { name, logo_img } = req.body;
+    const error = validation(name,logo_img);
     const errLength = Object.keys(error).length;
 
     if (errLength > 0) {
@@ -93,7 +100,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     let brandId = req.params.id;
     if (!brandId) {
-        return res.status(400).json({ message: "brandId missing" });
+        return res.status(400).json({ message: "brand id is missing" });
     }
     let brand;
     try {

@@ -12,9 +12,6 @@ route.post("/bulk-upload",upload.excelUpload.single("file"),productController.bu
 route.post("/upload", upload.upload.single("image"),productController.uploadCheck);
 route.get("/export-products",productController.exportProducts);
 
-// route.post('/uploadMultiple', upload.uploadMultiple.array("image",5),
-// productController.uploadMultipleFileCheck);
-
 route.post("/add",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create","staff.create"),productController.addProduct);
 route.get("/", verifyToken,productController.getProduct);
 route.get("/pagination",verifyToken,productController.pagination);

@@ -19,7 +19,5 @@ route.get("/sort/:asc",verifyToken,categoryController.sortByCategoryName);
 
 module.exports = route;
 
-// route.post('/createAdmin', verifyToken, 
-//     (req, res, next) => permissionCheck(req, res, next, "admin.create"),
-//     authController.register);
+
 

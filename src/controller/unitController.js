@@ -36,7 +36,7 @@ exports.addUnit = async (req, res) => {
         return res.status(200).json({ message: "unit added" });
     } catch (error) {
         console.log(error);
-        return res.status(400).json({ message: "Error while adding unit" });
+        return res.status(400).json({ message: "error while adding unit" });
     }
 }
 
@@ -49,7 +49,7 @@ exports.getUnitById = async (req, res) => {
     let unitId = req.params.id;
 
     if (!unitId) {
-        return res.status(400).json({ message: "unitId is missing" });
+        return res.status(400).json({ message: "unit id is missing" });
     }
 
     try {
@@ -60,7 +60,7 @@ exports.getUnitById = async (req, res) => {
         return res.status(200).send(unit);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({ message: "Error while get unit" });
+        return res.status(400).json({ message: "error while get unit" });
     }
 }
 
@@ -76,7 +76,7 @@ exports.updateUnit = async (req, res) => {
     }
 
     if (!unitId) {
-        return res.status(400).json({ message: "unitId is missing" });
+        return res.status(400).json({ message: "unit id is missing" });
     }
 
     try {
@@ -91,14 +91,14 @@ exports.updateUnit = async (req, res) => {
         return res.status(200).json({message: "unit updated"});
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while updating unit"});
+        return res.status(400).json({message: "error while updating unit"});
     }
 }
 
 exports.deleteById = async (req, res) => {
     let unitId = req.params.id;
     if (!unitId) {
-        return res.status(400).json({ message: "unitId missing" });
+        return res.status(400).json({ message: "unit id is missing" });
     }
     let unit;
     try {

@@ -12,17 +12,16 @@ function validation(
   discount,
   tax_id,
   payment_id,
-  // is_paid,
   order_status
 ) {
   let error = {};
 
   if (!user_id) {
-    error.user_id = "user_id required";
+    error.user_id = "user id required";
   }
 
   if (products.length === 0) {
-    error.products = "Atleast 1 item needed to be in product";
+    error.products = "atleast 1 item needed to be in product";
   }
 
   products.map((product) => {
@@ -41,9 +40,6 @@ function validation(
     if (!product.price) {
       error.price = "product price required";
     }
-    // await knex("products").where({})
-    // if(product.price ){
-    // }
 
     if (!product.subTotal) {
       error.subTotal = "product subTotal required";
@@ -51,7 +47,7 @@ function validation(
   });
 
   if (!staff_id) {
-    error.staff_id = "staff_id required";
+    error.staff_id = "staff id required";
   }
 
   if (discount === undefined) {
@@ -59,16 +55,12 @@ function validation(
   }
 
   if (tax_id === undefined) {
-    error.tax_id = "tax_id required";
+    error.tax_id = "tax id required";
   }
 
   if (payment_id === undefined) {
-    error.tax_id = "payment_id required";
+    error.tax_id = "payment id required";
   }
-
-  // if (is_paid === undefined) {
-  //   error.is_paid = "is_paid required";
-  // }
 
   if (!order_status) {
     error.order_status = "order status is required";
@@ -77,9 +69,43 @@ function validation(
   return error;
 }
 
+function bulkValidation(row) {
+  let error = {};
+
+  if (!row.user_id) error.user_id = "user_id is required";
+  if (!row.staff_id) error.staff_id = "staff_id is required";
+  if (row.discount === undefined) error.discount = "discount is required";
+  if (!row.tax_id) error.tax_id = "tax_id is required";
+  if (!row.payment_id) error.payment_id = "payment_id is required";
+  if (!row.order_status) error.order_status = "order_status is required";
+
+  let products;
+  try {
+    products = JSON.parse(row.products);
+  } catch {
+    error.products = "products must be a valid JSON array string";
+    return error;
+  }
+
+  if (!Array.isArray(products) || products.length === 0) {
+    error.products = "at least 1 product is required";
+    return error;
+  }
+
+  products.forEach((p, idx) => {
+    if (!p.id) error[`product_${idx}_id`] = "product id required";
+    if (!p.name || p.name.length < 2)
+      error[`product_${idx}_name`] = "product name must be min 2 chars";
+    if (!p.quantity) error[`product_${idx}_qty`] = "quantity required";
+    if (!p.price) error[`product_${idx}_price`] = "price required";
+  });
+
+  return error;
+}
+
+
 function generateInvoiceNumber() {
   const invoice_number = "INV_" + Date.now();
-  console.log(invoice_number);
   return invoice_number;
 }
 
@@ -98,9 +124,7 @@ function generateToken(user_id, order_id) {
 }
 
 exports.create = async (req, res) => {
-  // console.log(req.user)
   const staff_id = req.user.id;
-  // console.log(staff_id)
   const {
     user_id,
     products,
@@ -117,7 +141,6 @@ exports.create = async (req, res) => {
     discount,
     tax_id,
     payment_id,
-    // is_paid,
     order_status
   );
   const trx = await knex.transaction();
@@ -134,9 +157,7 @@ exports.create = async (req, res) => {
   );
   const discountAmount = (discount / 100) * subTotal;
   const taxRow = await trx("tax").where({ id: tax_id }).first();
-  console.log("tax row", taxRow);
   const tax_amount = (taxRow.percent / 100) * subTotal;
-  console.log("tax_amount", tax_amount);
 
   const grand_total = subTotal + tax_amount - discountAmount;
   const invoice_number = generateInvoiceNumber();
@@ -197,8 +218,6 @@ exports.create = async (req, res) => {
       success_url: `http://localhost:3000/stripe-payment/payment-success?token=${token}`,
       cancel_url: "http://localhost:3000/stripe-payment/payment-failed",
     });
-    console.log(session);
-    console.log("\nsessionId\n", session.id);
 
     await trx("payment_transactions").insert({
       order_id: orderId,
@@ -206,14 +225,6 @@ exports.create = async (req, res) => {
       paid_at: trx.fn.now(),
       closed_at: trx.fn.now(),
     });
-
-    // products.map((product) => ({
-    //   let existingProduct = trx("products as p")
-    //   .leftJoin("stocks as s","p.id","s.product_id")
-    //   .where("s.product_id",product.id)
-    //   .select("*");
-    //   existingProduct - 1;
-    // }))
 
     for (const product of products) {
       let existingProduct = await trx("stocks")
@@ -249,71 +260,133 @@ exports.create = async (req, res) => {
 };
 
 exports.bulkUpload = async (req, res) => {
-  // console.log(req.file)
   if (!req.file) {
     return res.status(404).json({ message: "Excel file is missing" });
   }
 
   try {
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-    // console.log("workbook", workbook);
-
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
-    // console.log("sheetName", sheetName);
-
     const workSheet = workbook.Sheets[sheetName];
-    // console.log("workSheet", workSheet);
+    const rows = XLSX.utils.sheet_to_json(workSheet);
 
-    const data = XLSX.utils.sheet_to_json(workSheet);
-    // console.log("data", data);
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "Excel file is empty" });
+    }
 
-    const orders = data.map((row) => ({
-      invoice_number: row["invoice_number"],
-      user_id: row["user_id"],
-      staff_id: row["staff_id"],
-      discount: row["discount"],
-      quantity: row["quantity"],
-      subTotal: row["subTotal"],
-      tax_id: row["tax_id"],
-      tax_percent: row["tax_percent"],
-      tax_amount: row["tax_amount"],
-      payment_id: row["payment_id"],
-      is_paid: row["is_paid"],
-      order_status: row["order_status"],
-      grand_total: row["grand_total"],
-    }));
+    const ordersMap = {};
 
-    const orderItems = data.map((row) => ({
-      order_id: row["order_id"],
-      product_id: row["product.id"],
-      order_id: row["orderId"],
-      quantity: row["quantity"],
-      price: row["price"],
-      subTotal: row["subTotal"]
-    }));
+    for (const row of rows) {
+      const key = `${row.user_id}_${row.staff_id}_${row.tax_id}_${row.discount}_${row.payment_id}_${row.order_status}`;
 
-
-    await knex.transaction(async (trx) => {
-      for (const order of orders) {
-        await trx("orders").insert(order);
+      if (!ordersMap[key]) {
+        ordersMap[key] = {
+          user_id: row.user_id,
+          staff_id: row.staff_id,
+          tax_id: row.tax_id,
+          discount: row.discount,
+          payment_id: row.payment_id,
+          order_status: row.order_status,
+          products: []
+        };
       }
-    });
 
-    await knex.transaction(async (trx) => {
-      for (const orderItem of orderItems) {
-        await trx("order_items").insert(orderItem);
+      ordersMap[key].products.push({
+        id: row.product_id,
+        name: row.product_name,
+        quantity: row.quantity,
+        price: row.price
+      });
+    }
+
+    const trx = await knex.transaction();
+
+    try {
+      for (const key of Object.keys(ordersMap)) {
+        const orderData = ordersMap[key];
+        const products = orderData.products;
+
+
+        for (const p of products) {
+          const stock = await trx("stocks").where("product_id", p.id).first();
+
+          if (!stock) throw new Error(`Product not found: ${p.id}`);
+          if (stock.quantity < p.quantity)
+            throw new Error(`Low stock for product ${p.id}`);
+        }
+
+
+        const taxRow = await trx("tax").where({ id: orderData.tax_id }).first();
+        if (!taxRow) throw new Error(`Invalid tax_id: ${orderData.tax_id}`);
+
+
+        const totalQty = products.reduce((a, p) => a + p.quantity, 0);
+        const subTotal = products.reduce((a, p) => a + p.quantity * p.price, 0);
+        const tax_amount = (taxRow.percent / 100) * subTotal;
+        const discountAmount = (orderData.discount / 100) * subTotal;
+        const grand_total = subTotal + tax_amount - discountAmount;
+
+        const invoice_number = `INV_${Date.now()}_${Math.floor(Math.random() * 99999)}`;
+
+
+        const [orderId] = await trx("orders").insert({
+          invoice_number,
+          user_id: orderData.user_id,
+          staff_id: orderData.staff_id,
+          discount: orderData.discount,
+          quantity: totalQty,
+          subTotal,
+          tax_id: orderData.tax_id,
+          tax_percent: taxRow.percent,
+          tax_amount,
+          payment_id: orderData.payment_id,
+          is_paid: "unpaid",
+          order_status: orderData.order_status,
+          grand_total
+        });
+
+
+        for (const p of products) {
+          await trx("order_items").insert({
+            product_id: p.id,
+            order_id: orderId,
+            quantity: p.quantity,
+            price: p.price,
+            subTotal: p.price * p.quantity
+          });
+
+          await trx("stocks")
+            .where("product_id", p.id)
+            .decrement("quantity", p.quantity);
+        }
+
+
+        await trx("payment_transactions").insert({
+          order_id: orderId,
+          payment_mode_id: orderData.payment_id,
+          paid_at: trx.fn.now(),
+          closed_at: trx.fn.now()
+        });
+
       }
-    });
 
+      await trx.commit();
+      return res.status(200).json({ message: "Bulk orders uploaded successfully" });
 
-    return res.status(200).json({ message: "order imported successfully" });
+    } catch (err) {
+      await trx.rollback();
+      console.error(err);
+      return res.status(400).json({ message: err.message });
+    }
 
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ message: "Error while import order", error });
-
+    console.error(error);
+    return res.status(500).json({ message: "Failed to read Excel file", error });
   }
-}
+};
+
+
+
 
 exports.exportOrders = async (req, res) => {
   if (!req.body) {
@@ -344,16 +417,12 @@ exports.exportOrders = async (req, res) => {
       );
 
     const worksheet = XLSX.utils.json_to_sheet(orders);
-    // console.log("worksheet",worksheet);
 
     const workbook = XLSX.utils.book_new();
-    // console.log("workbook",workbook);
 
     const beforeBuffer = XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
-    // console.log("beforeBuffer",beforeBuffer);
 
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    // console.log("buffer",buffer);
 
     res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -361,27 +430,6 @@ exports.exportOrders = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Error exporting orders', error });
+    return res.status(500).json({ message: 'error exporting orders', error });
   }
 }
-
-
-/*
-
-const orders = data.map((row) => ({
-            name: row["name"] || row["Name"],
-            name_slug: row["name_slug"] || null,
-            image: row["image"] || '',
-            description: row["description"] || '',
-            marked_price: row["marked_price"] || 0,
-            purchased_price: row["purchased_price"] || 0,
-            selling_price: row["selling_price"] || 0,
-            category: row["category"] || 1,
-            brand_id: row["brand_id"] || 0,
-            is_active: row["is_active"] !== undefined ? row["is_active"] : 1,
-            is_delete: row["is_delete"] !== undefined ? row["is_delete"] : 0,
-            ratings: row["ratings"] || null,
-            reviews: row["reviews"] || null
-        }));
-
-*/

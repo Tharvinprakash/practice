@@ -5,7 +5,7 @@ const knex = require('../../config/db');
 function validation(name, type){
     let error = {};
 
-    if (name.length != 0) {
+    if (name.length == 0) {
         error.name = "name length atleast 1";
     }
     
@@ -26,12 +26,12 @@ exports.create = async (req, res) => {
     }
 
     try {
-        let existingPaymentMode = await knex("payment").where({name: name}).first();
+        let existingPaymentMode = await knex("payment_modes").where({name: name}).first();
         if(existingPaymentMode){
             return res.status(400).json({message: "Payment mode already exists"});
         }
         if(!existingPaymentMode){
-            await knex("payment").insert({
+            await knex("payment_modes").insert({
                 name: name, 
                 type: type,
                 is_active: is_active,
@@ -39,35 +39,41 @@ exports.create = async (req, res) => {
                 updated_by: userId,
             });
         }
-        return res.status(200).json({message: "payment added"});
+        return res.status(200).json({message: "payment modes added"});
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while adding payment"});
+        return res.status(400).json({message: "Error while adding payment modes"});
     }
 }
 
 exports.getPayments = async (req, res) => {
-    let payments = await knex("payment").select("*")
+    let payments = await knex("payment_modes").select("*")
     return res.send(payments);
 }
 
 exports.getPaymentById = async (req, res) => {
     let paymentId = req.params.id;
     if (!paymentId) {
-        return res.status(400).json({ message: "paymentId missing" });
+        return res.status(400).json({ message: "payment id is  missing" });
     }
     let payment;
     try {
-        payment = await knex("tax").where({ id: paymentId }).first();
+        payment = await knex("payment_modes").where({ id: paymentId }).first();
         return res.status(200).send(payment);
     } catch (error) {
-        return res.status(400).json({ message: "error while parsing get payment" });
+        return res.status(400).json({ message: "error while parsing get payment modes" });
     }
 }
 
 exports.update = async (req, res) => {
     const paymentId = req.params.id;
     const userId = req.user.id;
+    if(!paymentId){
+        return res.status(400).json({ message: "payment id is  missing" });
+    }
+    if(!userId){
+        return res.status(400).json({ message: "user id is  missing" });
+    }
     const { name, type,is_active } = req.body;
     const error = validation(name, type);
     const errLength = Object.keys(error).length;
@@ -76,45 +82,45 @@ exports.update = async (req, res) => {
     }
     let payment;
     try {
-        let existingPayment = await knex("payment").where({ name: name }).first();
+        let existingPayment = await knex("payment_modes").where({ name: name }).first();
         if (existingPayment) {
-            return res.status(400).json({ message: "payment exist" });
+            return res.status(400).json({ message: "payment modes exist" });
         }
-        tax = await knex("tax").where({ id: paymentId }).first();
+        payment = await knex("payment_modes").where({ id: paymentId }).first();
         if (!paymentId) {
-            return res.status(404).json({ message: "payment not found" });
+            return res.status(404).json({ message: "payment modes not found" });
         }
         if (payment) {
-            await knex("tax").where({ id: paymentId }).update({
+            await knex("payment_modes").where({ id: paymentId }).update({
                 name: name,
                 type: type, 
                 is_active: is_active,
                 updated_by: userId
             });
         }
-        return res.status(200).json({ message: "payment updated" });
+        return res.status(200).json({ message: "payment modes updated" });
     } catch (error) {
-        return res.status(400).json({ message: "error while updating payment" });
+        return res.status(400).json({ message: "error while updating payment modes" });
     }
 }
 
 exports.delete = async (req, res) => {
     let paymentId = req.params.id;
     if (!paymentId) {
-        return res.status(400).json({ message: "paymentId missing" });
+        return res.status(400).json({ message: "payment id is  missing" });
     }
     let payment;
     try {
-        payment = await knex("products").where({ id: paymentId }).first();
+        payment = await knex("payment_modes").where({ id: paymentId }).first();
         if (!payment) {
-            return res.status(404).json({ message: "tax is not found" });
+            return res.status(404).json({ message: "payment modes is not found" });
         }
         if (payment) {
-            await knex("products").where({ id: paymentId }).del();
+            await knex("payment_modes").where({ id: paymentId }).del();
         }
-        return res.status(200).json({ message: "payment deleted" });
+        return res.status(200).json({ message: "payment modes deleted" });
     } catch (error) {
-        return res.status(400).json({ message: "error while deleting payment" })
+        return res.status(400).json({ message: "error while deleting payment modes" })
     }
 }
 

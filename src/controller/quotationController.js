@@ -2,7 +2,6 @@ const express = require("express");
 const knex = require("../../config/db");
 
 function validation(
-  ref_no,
   supplier_id,
   product_id,
   grand_total,
@@ -11,24 +10,22 @@ function validation(
   payment_status
 ) {
   let error = {};
-  if (!ref_no) {
-    error.ref_no = "ref_no is required";
-  }
+
 
   if (!supplier_id) {
-    error.supplier_id = "supplier_id image is required";
+    error.supplier_id = "supplier id image is required";
   }
 
   if (!product_id) {
-    error.product_id = "product_id is required";
+    error.product_id = "product id is required";
   }
 
   if (!grand_total) {
-    error.grand_total = "grand_total is required";
+    error.grand_total = "grand total is required";
   }
 
   if (!added_by) {
-    error.added_by = "added_by is required";
+    error.added_by = "added by is required";
   }
 
   if (!discount) {
@@ -36,7 +33,7 @@ function validation(
   }
 
   if (!payment_status) {
-    error.payment_status = "payment_status is required";
+    error.payment_status = "payment status is required";
   }
 
   return error;
@@ -44,7 +41,6 @@ function validation(
 
 function generateRefNumber() {
   const invoice_number = "REF_" + Date.now();
-  console.log(invoice_number);
   return invoice_number;
 }
 
@@ -66,19 +62,20 @@ exports.create = async (req, res) => {
     discount,
     payment_status
   );
+  
   const errLength = Object.keys(error).length;
 
   if (errLength > 0) {
     return res.status(400).send(error);
   }
 
+  let ref_no = generateRefNumber();
   try {
     let quotation = await knex("quotations").where({ ref_no: ref_no }).first();
     if (quotation) {
       return res.status(400).json({ message: "quotation exist" });
     }
 
-    let ref_no = generateRefNumber();
 
     await knex("quotations").insert({
       ref_no: ref_no,
@@ -117,6 +114,9 @@ exports.getQuotationById = async (req, res) => {
 
 exports.update = async (req, res) => {
   const quotationId = req.params.id;
+   if (!quotationId) {
+        return res.status(400).json({ message: "quotation id is missing" });
+    }
   const {
     ref_no,
     supplier_id,
@@ -126,6 +126,16 @@ exports.update = async (req, res) => {
     discount,
     payment_status,
   } = req.body;
+
+  const error = validation(
+    ref_no,
+    supplier_id,
+    product_id,
+    grand_total,
+    added_by,
+    discount,
+    payment_status,
+  );
   const errLength = Object.keys(error).length;
 
   if (errLength > 0) {
@@ -135,10 +145,10 @@ exports.update = async (req, res) => {
   let quotation;
   try {
     let existingQuotation = await knex("quotations")
-      .where({ ref_no: ref_no })
+      .where({ id: quotationId })
       .first();
-    if (existingQuotation) {
-      return res.status(400).json({ message: "quotation exist" });
+    if (!existingQuotation) {
+      return res.status(400).json({ message: "quotation not exist" });
     }
     quotation = await knex("quotations").where({ id: quotationId }).first();
     if (!quotationId) {
@@ -165,7 +175,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     let quotationId = req.params.id;
     if (!quotationId) {
-        return res.status(400).json({ message: "quotationId missing" });
+        return res.status(400).json({ message: "quotation id is missing" });
     }
     let quotation;
     try {

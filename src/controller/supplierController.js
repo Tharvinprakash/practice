@@ -125,7 +125,7 @@ exports.getSupplierById = async (req, res) => {
   let supplierId = req.params.id;
 
   if (!supplierId) {
-    return res.status(400).json({ message: "supplierId is missing" });
+    return res.status(400).json({ message: "supplier id is missing" });
   }
 
   try {
@@ -174,7 +174,7 @@ exports.updateSupplier = async (req, res) => {
   }
 
   if (!supplierId) {
-    return res.status(400).json({ message: "supplierId is missing" });
+    return res.status(400).json({ message: "supplier id is missing" });
   }
 
   try {
@@ -204,7 +204,7 @@ exports.updateSupplier = async (req, res) => {
 exports.deleteById = async (req, res) => {
   let supplierId = req.params.id;
   if (!supplierId) {
-    return res.status(400).json({ message: "supplierId missing" });
+    return res.status(400).json({ message: "supplier id is missing" });
   }
   let supplier;
   try {
@@ -212,9 +212,7 @@ exports.deleteById = async (req, res) => {
     if (!supplier) {
       return res.status(404).json({ message: "supplier is not found" });
     }
-    if (supplier) {
       await knex("suppliers").where({ id: supplierId }).del();
-    }
     return res.status(200).json({ message: "supplier deleted" });
   } catch (error) {
     return res.status(400).json({ message: "error while deleting supplier" });

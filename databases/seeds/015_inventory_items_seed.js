@@ -8,27 +8,14 @@ exports.seed = async (knex) => {
             is_available: true,
             quantity: 2,
             tax_id: 1,
-            payment_due_date: "06/12/2025",
+            payment_due_date: "2025-12-06 00:00:00",
             payment_type: "credit",
             order_type: "received",
             payment_status: "paid",
             grand_total: 80000,
-            expected_arrival_date: "05/12/2025",
-            actual_arrival_date: "07/12/2025"
+            expected_arrival_date: "2025-12-05 12:23:21",
+            actual_arrival_date: "2025-12-07 15:06:01"
         }
     ])
 }
 
-/*
-
-006_products_seed - 012_units_seed
-007_ratings_seed - 013_supplier_seed
-008_ - product_seed
-009_product_settings - 007_ratings_seed
-010_tax_seed - 009_product_settings
-011_payments_seed - 010_tax_seed
-012_units_seed - 011_payments_seed 
-013 - inventory_seed
-014 - 015_inventory_items_seed
-
-*/

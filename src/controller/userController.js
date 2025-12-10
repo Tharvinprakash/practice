@@ -51,9 +51,6 @@ exports.updateUser = async (req, res) => {
         console.log(err);
     }
 
-    // console.log(user);
-    // console.log(req.body);
-
     userName = req.body.name;
     userEmail = req.body.email;
     userPassword = req.body.password;

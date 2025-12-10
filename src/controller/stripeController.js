@@ -1,100 +1,46 @@
-const express = require('express');
-const { string } = require('joi');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const knex = require("../../config/db");
 
 const jwt = require('jsonwebtoken');
-
-const route = express.Router();
-
 require("dotenv").config();
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-function generateToken(user_id,order_id){
-    const token = jwt.sign({
-        user_id: user_id,
-        order_id: order_id
-    },
-    process.env.JWT_SECRET,{
-        expiresIn : '24h'
-    }
-    );
-    return token;
-}
-
-
-exports.createCheckoutSession = async (req, res) => {
+exports.getPaymentSuccess = async (req, res) => {
+    let userId,orderId;
     try {
-        
-        const { amount, user_id, order_id } = req.body;
-
-        console.log( { amount, user_id, order_id })
-    
-        if (!amount || isNaN(amount) || amount <= 0) {
-            return res.status(400).json({ message: "amount is invalid" });
+        const{token} = req.query;
+        if(!token){
+            return res.status(400).json({message: "token is missing"});
         }
-
-        const token = generateToken(user_id,order_id);
-    
-        const amountInCents = Math.round(amount * 100);
-    
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            mode: "payment",
-    
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {name: `Order #${order_id}`},
-                        unit_amount: amountInCents ,
-                    },
-                    quantity : 1
-                },
-            ],
-            metadata: {
-                user_id,
-                order_id
-            },
-            success_url: `http://localhost:3000/stripe-payment/payment-success?token=${token}`,
-            cancel_url: "http://localhost:3000/stripe-payment/payment-failed"
+        try {
+            const {user_id,order_id} =  jwt.verify(token, process.env.JWT_SECRET);
+            userId = user_id;
+            orderId = order_id;
+        } catch (error) {
+            return res.status(400).json({message: "Jwt error while payment"})
+        }
+        
+        await knex("orders").where({id: orderId}).update({
+            is_paid: true
         });
-        console.log(session)
-        return res.status(200).json({session});
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: error.message});
+        return res.status(200).json({message: "unsuccessful"})
     }
+    return res.json({ message: "payment success" });
+}
+
+exports.getPaymentFail = async (req, res) => {
+    const {user_id,order_id} = jwt.verify(token, process.env.JWT_SECRET);
+    return res.json({ message: "payment failed" });
 }
 
 
-// http://localhost:3000/stripe-payment/webhook
 
 
 
 
 
-// const{amount,user_id,order_id} = req.body;
 
-// if(!amount || isNaN(amount) || amount <= 0){
-    //     return res.status(400).json({message: "amount is invalid"});
-    // }
-    
-    // const amountInCents = Math.round(amount * 100);
-    
-    // try {
-//     const paymentIntent = await stripe.paymentIntents.create({
-    //         amount: amountInCents,
-    //         currency: 'usd',
-    //         description: `${order_id}`,
-    //         metadata: {
-        //             order_id : String(order_id),
-        //             user_id: String(user_id)
-        //         }
-        //     });
-        //     return res.status(200).json({clientSecret:paymentIntent.client_secret});
-        // } catch (error) {
-            //     return res.status(400).json({message: "Error while create stripe payment"})
-            // }
 
-            // success_url: "https://yourdomain.com/payment-success?session_id={CHECKOUT_SESSION_ID}",
-                //   cancel_url: "https://yourdomain.com/payment-failed",
+

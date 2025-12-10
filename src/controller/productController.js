@@ -36,15 +36,6 @@ function validation(name, image, description, marked_price, purchased_price,
         error.category = "category can't be empty";
     }
 
-
-    // if (typeof is_active !== "boolean") {
-    //     error.is_active = "is active must be true or false";
-    // }
-
-    // if (typeof is_delete !== "boolean") {
-    //     error.is_delete = "is delete must be true or false";
-    // }
-
     if (ratings.length < 0) {
         error.ratings = "ratings can't be empty";
     }
@@ -55,6 +46,7 @@ function validation(name, image, description, marked_price, purchased_price,
 
     return error;
 }
+
 
 exports.uploadCheck = async (req, res) => {
     if (!req.file) {
@@ -69,11 +61,6 @@ exports.uploadCheck = async (req, res) => {
 }
 
 exports.addProduct = async (req, res) => {
-    console.log("request", req.body)
-    // console.log("request image",req.image);
-    // console.log("request file", req.image);
-    // console.log("request file.filename",req.file.filename);
-
 
     const { name, image, description, marked_price, purchased_price,
         selling_price, category, is_active, is_delete, ratings, reviews
@@ -89,13 +76,10 @@ exports.addProduct = async (req, res) => {
 
     try {
         let product = await knex("products").where({ name: name }).first();
-        console.log("product", product);
         if (product) {
             return res.status(400).json({ message: "product exist" });
         }
         if (!product) {
-            console.log(name, slugify(name), image, description, marked_price, purchased_price,
-                selling_price, category, is_active, is_delete, ratings, reviews);
             await knex("products").insert({
                 name: name,
                 name_slug: slugify(name),
@@ -126,7 +110,7 @@ exports.getProduct = async (req, res) => {
 exports.getProductById = async (req, res) => {
     let productId = req.params.id;
     if (!productId) {
-        return res.status(400).json({ message: "productId missing" });
+        return res.status(400).json({ message: "product id is missing" });
     }
     let product;
     try {
@@ -140,11 +124,14 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
     const productId = req.params.id;
+    if (!productId) {
+        return res.status(400).json({ message: "product id is  missing" });
+    }
     const { name, image, description, marked_price, purchased_price,
-        selling_price, category, stock, is_active, is_delete, ratings, reviews } = req.body;
+        selling_price, category, is_active, is_delete, ratings, reviews } = req.body;
 
     const error = validation(name, image, description, marked_price, purchased_price,
-        selling_price, category, stock, is_active, is_delete, ratings, reviews);
+        selling_price, category, is_active, is_delete, ratings, reviews);
 
     const errLength = Object.keys(error).length;
     if (errLength > 0) {
@@ -170,7 +157,6 @@ exports.updateProduct = async (req, res) => {
                 purchased_price: purchased_price,
                 selling_price: selling_price,
                 category: category,
-                stock: stock,
                 is_active: is_active,
                 is_delete: is_delete,
                 ratings: ratings,
@@ -186,7 +172,7 @@ exports.updateProduct = async (req, res) => {
 exports.deleteById = async (req, res) => {
     let productId = req.params.id;
     if (!productId) {
-        return res.status(400).json({ message: "productId missing" });
+        return res.status(400).json({ message: "product id is missing" });
     }
     let product;
     try {
@@ -231,7 +217,6 @@ exports.searchProduct = async (req, res) => {
         product = await knex("products")
             .where('name', 'like', `%${productName.toLowerCase()}%`)
             .select("*");
-        // console.log(product);
         if (product.length == 0) {
             return res.status(404).json({ message: "No search result" });
         }
@@ -287,55 +272,78 @@ exports.sortByProductName = async (req, res) => {
 }
 
 exports.bulkUpload = async (req, res) => {
-    // console.log(req.file)
     if (!req.file) {
         return res.status(404).json({ message: "Excel file is missing" });
     }
 
     try {
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        // console.log("workbook", workbook);
-
         const sheetName = workbook.SheetNames[0];
-        // console.log("sheetName", sheetName);
-
         const workSheet = workbook.Sheets[sheetName];
-        // console.log("workSheet", workSheet);
+        const rows = XLSX.utils.sheet_to_json(workSheet);
 
-        const data = XLSX.utils.sheet_to_json(workSheet);
-        // console.log("data", data);
+        let validationErrors = [];
 
-        const products = data.map((row) => ({
-            name: row["name"] || row["Name"],
-            name_slug: row["name_slug"] || null,
-            image: row["image"] || '',
-            description: row["description"] || '',
-            marked_price: row["marked_price"] || 0,
-            purchased_price: row["purchased_price"] || 0,
-            selling_price: row["selling_price"] || 0,
-            category: row["category"] || 1,
-            brand_id: row["brand_id"] || 0,
-            is_active: row["is_active"] !== undefined ? row["is_active"] : 1,
-            is_delete: row["is_delete"] !== undefined ? row["is_delete"] : 0,
-            ratings: row["ratings"] || null,
-            reviews: row["reviews"] || null
+        for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            let errors = {};
+
+            if (!row.name) errors.name = "name is required";
+            if (!row.name_slug) errors.name_slug = "name_slug is required";
+            if (!row.description) errors.description = "description is required";
+            if (!row.marked_price) errors.marked_price = "marked_price is required";
+            if (!row.purchased_price) errors.purchased_price = "purchased_price is required";
+            if (!row.selling_price) errors.selling_price = "selling_price is required";
+            if (!row.brand_id) errors.brand_id = "brand_id is required";
+            if (row.is_active === undefined) errors.is_active = "is_active is required";
+            if (row.is_delete === undefined) errors.is_delete = "is_delete is required";
+            if (!row.ratings && row.ratings !== 0) errors.ratings = "ratings is required";
+            if (!row.reviews) errors.reviews = "reviews is required";
+
+            if (Object.keys(errors).length > 0) {
+                validationErrors.push({ row: i + 1, errors });
+            }
+        }
+
+        if (validationErrors.length > 0) {
+            return res.status(400).json({
+                message: "Validation failed",
+                validationErrors
+            });
+        }
+
+        const products = rows.map(row => ({
+            name: row.name,
+            name_slug: row.name_slug,
+            description: row.description,
+            marked_price: row.marked_price,
+            purchased_price: row.purchased_price,
+            selling_price: row.selling_price,
+            brand_id: row.brand_id,
+            is_active: row.is_active,
+            is_delete: row.is_delete,
+            ratings: row.ratings,
+            reviews: row.reviews
         }));
 
-
-        await knex.transaction(async (trx) => {
+        await knex.transaction(async trx => {
             for (const product of products) {
                 await trx("products").insert(product);
             }
-        })
+        });
 
-        return res.status(200).json({ message: "Product imported successfully" });
+        return res.status(200).json({ message: "Products imported successfully" });
 
     } catch (error) {
         console.log(error);
-        return res.status(400).json({ message: "Error while import product", error });
-
+        return res.status(400).json({
+            message: "Error while importing products",
+            error
+        });
     }
-}
+};
+
+
 
 exports.exportProducts = async (req, res) => {
     if (!req.body) {
@@ -343,10 +351,6 @@ exports.exportProducts = async (req, res) => {
     }
     try {
         const products = await knex("products as p")
-            .leftJoin("categories as c", "c.id", "p.category")
-            .leftJoin("inventory as i", "i.product_id", "p.id")
-            .leftJoin("suppliers as su", "su.id", "i.supplier_id")
-            .leftJoin("stocks as s", "s.product_id", "p.id")
             .select(
                 "p.name",
                 "p.name_slug",
@@ -354,10 +358,7 @@ exports.exportProducts = async (req, res) => {
                 "p.marked_price",
                 "p.purchased_price",
                 "p.selling_price",
-                "c.id as category_id",
                 "p.brand_id",
-                "s.quantity as stock_quantity",
-                "su.id as supplier_id",
                 "p.is_active",
                 "p.is_delete",
                 "p.ratings",
@@ -366,20 +367,16 @@ exports.exportProducts = async (req, res) => {
             );
 
         const worksheet = XLSX.utils.json_to_sheet(products);
-        // console.log("worksheet",worksheet);
 
         const workbook = XLSX.utils.book_new();
-        // console.log("workbook",workbook);
 
         const beforeBuffer = XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
-        // console.log("beforeBuffer",beforeBuffer);
 
         const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-        // console.log("buffer",buffer);
 
-        res.setHeader("Content-Disposition","attachment; filename=products.xlsx");
-        res.setHeader("Content-Type","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        return res.send(buffer);    
+        res.setHeader("Content-Disposition", "attachment; filename=products.xlsx");
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return res.send(buffer);
 
     } catch (error) {
         console.error(error);

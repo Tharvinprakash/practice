@@ -35,12 +35,10 @@ exports.addCategory = async (req, res) => {
 
     try {
         let category = await knex("categories").where({ name: name }).first();
-        console.log("category", category);
         if (category) {
             return res.status(400).json({ message: "category exist" });
         }
         if (!category) {
-            console.log(name, slugify(name), description, is_active, is_delete);
             await knex("categories").insert({
                 name: name,
                 name_slug: slugify(name),
@@ -63,21 +61,24 @@ exports.getCategory = async (req, res) => {
 
 exports.getCategoryById = async (req, res) => {
     let categoryId = req.params.id;
-    if (!categoryId){
-        return res.status(400).json({message: "categoryId missing"});
+    if (!categoryId) {
+        return res.status(400).json({ message: "category id is missing" });
     }
     let category;
     try {
-        category = await knex("categories").where({id:categoryId}).first();
+        category = await knex("categories").where({ id: categoryId }).first();
         return res.status(200).send(category);
     } catch (error) {
-        return res.status(400).json({message: "error while parsing get category"});
-    
+        return res.status(400).json({ message: "error while parsing get category" });
+
     }
 }
 
 exports.updateCategory = async (req, res) => {
     const categoryId = req.params.id;
+    if (!categoryId) {
+        return res.status(400).json({ message: "category id is missing" });
+    }
     const { name, description, is_active, is_delete } = req.body;
     const error = validation(name, description, is_active, is_delete);
     const errLength = Object.keys(error).length;
@@ -86,9 +87,9 @@ exports.updateCategory = async (req, res) => {
     }
     let category;
     try {
-        let existingCategory = await knex("categories").where({ name: name }).first();
-        if (existingCategory) {
-            return res.status(400).json({ message: "category exist" });
+        let existingCategory = await knex("categories").where({ id: categoryId }).first();
+        if (!existingCategory) {
+            return res.status(400).json({ message: "category not exist" });
         }
         category = await knex("categories").where({ id: categoryId }).first();
         if (!categoryId) {
@@ -109,58 +110,58 @@ exports.updateCategory = async (req, res) => {
     }
 }
 
-exports.deleteById = async(req,res) => {
+exports.deleteById = async (req, res) => {
     let categoryId = req.params.id;
-    if (!categoryId){
-        return res.status(400).json({message: "categoryId missing"});
+    if (!categoryId) {
+        return res.status(400).json({ message: "category id is  missing" });
     }
     let category;
     try {
-        category = await knex("categories").where({id: categoryId}).first();
-        if(!category){
-            return res.status(404).json({message: "category is not found"});
+        category = await knex("categories").where({ id: categoryId }).first();
+        if (!category) {
+            return res.status(404).json({ message: "category is not found" });
         }
-        if(category){
-            await knex("categories").where({id:categoryId}).del();
+        if (category) {
+            await knex("categories").where({ id: categoryId }).del();
         }
-        return res.status(200).json({message: "category deleted"});
+        return res.status(200).json({ message: "category deleted" });
     } catch (error) {
-        return res.status(400).json({message: "error while deleting category"})
+        return res.status(400).json({ message: "error while deleting category" })
     }
 }
 
-exports.searchCategory = async(req,res) => {
-    const categoryName = req.params.name;
-    console.log(categoryName)
+exports.searchCategory = async (req, res) => {
+    const categoryName = (req.params.name || '').trim();
+    if (!categoryName) {
+        return res.status(404).json({ message: "No search result" });
+    }
+
     let category;
     try {
         category = await knex("categories")
-                        .where('name','like',`%${categoryName.toLowerCase()}%`)
-                        .select("*");
-        console.log(category);
-        if(category.length == 0){
-            return res.status(404).json({message: "No search result"});
+            .where('name', 'like', `%${categoryName.toLowerCase()}%`)
+            .select("*");
+        if (category.length == 0) {
+            return res.status(404).json({ message: "No search result" });
         }
         return res.status(200).send(category);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while searching category"});
+        return res.status(400).json({ message: "Error while searching category" });
     }
 }
 
-exports.sortByCategoryName = async(req,res) => {
+exports.sortByCategoryName = async (req, res) => {
     let op = (req.params.asc).toLowerCase();
-    console.log(op);
-    if(op != 'asc' && op != 'desc'){
+    if (op != 'asc' && op != 'desc') {
         op = 'asc';
     }
     try {
         let products = await knex("categories").select("*")
-                .orderBy('name',`${op}`);
-        console.log(products);
+            .orderBy('name', `${op}`);
         return res.status(200).send(products);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({message: "Error while sorting"});
+        return res.status(400).json({ message: "Error while sorting" });
     }
 }

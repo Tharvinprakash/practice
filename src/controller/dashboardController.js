@@ -9,7 +9,6 @@ exports.getRecentSales = async (req, res) => {
         .select("o.invoice_number", "u.name as customer_name",
             "s.name as staff_name", "o.is_paid",
             "o.grand_total", "o.created_at");
-    // console.log(recentSales);
     return res.status(200).send(recentSales);
 }
 
@@ -24,7 +23,6 @@ exports.getRecentPurchases = async (req, res) => {
             "s.name as supplier_name",
             "i.grand_total as total", "i.actual_arrival_date as date"
         )
-    // console.log(recentPurchases);
     return res.status(200).send(recentPurchases);
 }
 
@@ -37,7 +35,6 @@ exports.topProductsOnSale = async (req, res) => {
         .groupBy("p.id")
         .orderBy("total", "desc")
         .limit(5);
-    // console.log(topProductOnSales);
     return res.status(200).send(topProductOnSales);
 }
 
@@ -50,7 +47,6 @@ exports.topProductsOnPurchase = async (req, res) => {
                                         .groupBy("p.id")
                                         .orderBy("total","desc")
                                         .limit(5);
-    // console.log(topProductOnPurchases);
     return res.status(200).send(topProductOnPurchases);
 }
 
@@ -64,7 +60,6 @@ exports.getTopSuppliers = async(req,res) => {
                                 .groupBy("p.id")
                                 .orderBy("total","desc")
                                 .limit(5);
-    // console.log(topSuppliers);
     return res.status(200).send(topSuppliers);
 }
 
@@ -78,7 +73,6 @@ exports.getTopCustomers = async(req,res) => {
                             .groupBy("u.id")
                             .orderBy("total","desc")
                             .limit(5);
-    // console.log(topCustomers);
     return res.status(200).send(topCustomers);
 }
 
@@ -88,7 +82,6 @@ exports.totalSales = async(req,res) => {
                             .whereBetween("o.created_at",[`${from} 00:00:00`,`${to} 23:59:59`])
                             .sum("o.grand_total as total");
 
-    console.log(totalSales);
     return res.status(200).send(totalSales);
 }
 
@@ -97,7 +90,6 @@ exports.totalPurchases = async(req,res) => {
     let totalPurchases = await knex("inventory_items as i")
                             .whereBetween("i.actual_arrival_date",[`${from} 00:00:00`,`${to} 23:59:59`])
                             .sum("i.grand_total as total");
-    // console.log(totalPurchases);
     return res.status(200).send(totalPurchases);
 }
 

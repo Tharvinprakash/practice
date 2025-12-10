@@ -10,6 +10,6 @@ route.post("/add",verifyToken,(req,res,next) => permissionCheck(req, res, next, 
 route.get("/",verifyToken, supplierController.getSupplier);
 route.get("/:id",verifyToken,supplierController.getSupplierById);
 route.put("/update/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create"), supplierController.updateSupplier);
-route.delete("/delete/:id",(req,res,next) => permissionCheck(req, res, next, "admin.delete"),verifyToken,supplierController.deleteById);
+route.delete("/delete/:id",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.delete"),verifyToken,supplierController.deleteById);
 
 module.exports=route;

@@ -23,7 +23,7 @@ function validation(name, email, password, phone_number) {
     error.password = "password length atleast 8";
   }
 
-  if (phone_number.length !== 10) {
+  if (phone_number.length != 10) {
     error.phone_number = "phone_number must be 10 numbers";
   }
 
@@ -51,14 +51,15 @@ function reset(email, otp_expiration, password) {
 }
 
 exports.register = async (req, res) => {
-  // console.log(req.body);
   const { name, email, password, phone_number, role_id } = req.body;
-  // console.log("\n",role_id);
   const error = validation(name, email, password, phone_number);
-  // console.log(Object.keys(error).length);
   const errLength = Object.keys(error).length;
   if (errLength > 0) {
     return res.status(400).send(error);
+  }
+  let user = await knex("users").where({email:email}).first();
+  if(user){
+    return res.status(200).json({message: "user already exists"});
   }
   const hashed = await bcrypt.hash(password, 10);
   await knex("users").insert({
@@ -89,8 +90,7 @@ exports.login = async (req, res) => {
     return res.status(404).json({ message: "email not exist" });
   }
 
-  // const code = await bcrypt.hash("123456",10);
-  // console.log("\n" + code);
+
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
@@ -151,11 +151,9 @@ exports.googleCallback = async (req, res) => {
         google_id: googleSub,
       });
 
-      //   console.log(google_id);
 
       user = await knex("users").where({ id: inserted_id }).first();
 
-      console.log(user);
     }
 
     const token = jwt.sign(
@@ -214,7 +212,6 @@ exports.forgotpassword = async (req, res) => {
 
 exports.verify = async (req, res) => {
   const { email, otp } = req.body;
-  // console.log(email,otp)
 
   if (!email) {
     return res.status(400).json({ message: "email not found" });
@@ -225,7 +222,6 @@ exports.verify = async (req, res) => {
 
   try {
     let user = await knex("users").where({ email: email }).first();
-    // console.log("user",user)
     if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
