@@ -433,3 +433,13 @@ exports.exportOrders = async (req, res) => {
     return res.status(500).json({ message: 'error exporting orders', error });
   }
 }
+
+exports.getOrders = async(req,res) => {
+  const resp = await knex("orders as o").leftJoin("order_items as oi","o.id","oi.order_id")
+              .leftJoin("products as p","oi.product_id","p.id")
+              .leftJoin("users as u","u.id","o.user_id")
+              .leftJoin("users as s","u.id","o.staff_id")
+              .select("o.invoice_number","o.is_paid","o.grand_total","u.name as name","s.name as staff_name","p.name as product_name");
+
+  return res.status(200).json({data: resp,message: "orders fetched successfully"});
+}

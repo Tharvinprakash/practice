@@ -48,7 +48,7 @@ exports.create = async (req, res) => {
 
 exports.getPayments = async (req, res) => {
     let payments = await knex("payment_modes").select("*")
-    return res.send(payments);
+    return res.status(200).json({data: payments,message: "payment modes fetched successfully"});
 }
 
 exports.getPaymentById = async (req, res) => {

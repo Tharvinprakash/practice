@@ -2,6 +2,7 @@ const express = require('express')
 const app = express();
 const dotenv = require('dotenv')
 const path = require('path')
+const cors = require('cors')
 
 const authRoutes = require("./src/route/authRoutes")
 const userRoutes = require("./src/route/userRoutes")
@@ -21,9 +22,16 @@ const stripeRoutes = require('./src/route/stripeRoutes')
 
 const { json } = require('stream/consumers');
 
-const PORT = 3000;
+const PORT = 5000;
 dotenv.config();
 
+app.use((
+    cors({
+        origin: "http://localhost:5173",
+        methods: ["GET","POST","PUT","DELETE"],
+        credentials: true
+    })
+))
 app.use(express.json());
 
 app.use("/auth", authRoutes);

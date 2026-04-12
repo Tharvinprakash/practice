@@ -97,7 +97,7 @@ exports.create = async (req, res) => {
 
 exports.getQuotation = async (req, res) => {
   let quotations = await knex("quotations").select("*");
-  return res.status(200).send(quotations);
+  return res.status(200).json({data: quotations,message: "quotations fetched successfully"});
 };
 
 exports.getQuotationById = async (req, res) => {

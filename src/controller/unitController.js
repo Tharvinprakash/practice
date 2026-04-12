@@ -42,7 +42,7 @@ exports.addUnit = async (req, res) => {
 
 exports.getUnits = async (req, res) => {
     let units = await knex("units").select("*");
-    return res.status(200).send(units);
+    return res.status(200).json({data: units,message: "units fetched successfully"});
 }
 
 exports.getUnitById = async (req, res) => {

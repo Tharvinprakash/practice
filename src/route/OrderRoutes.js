@@ -13,6 +13,7 @@ const { verifyToken,permissionCheck } = require("../middleware/middleware");
 route.post("/create",verifyToken,(req,res,next) => permissionCheck(req, res, next, "admin.create","staff.create"),orderController.create)
 route.post("/bulk-upload",upload.excelUpload.single("file"),orderController.bulkUpload);
 route.get("/export-orders",orderController.exportOrders);
+route.get("/orders",orderController.getOrders);
 
 
 module.exports = route;

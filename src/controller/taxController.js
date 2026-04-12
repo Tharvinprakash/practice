@@ -48,7 +48,7 @@ exports.create = async (req, res) => {
 
 exports.getTaxes = async (req, res) => {
     let taxes = await knex("tax").select("*")
-    return res.send(taxes);
+    return res.status(200).json({data: taxes,message: "tax fetched successfully"});
 }
 
 exports.getTaxById = async (req, res) => {

@@ -44,7 +44,7 @@ exports.create = async (req, res) => {
 
 exports.getBrands = async (req, res) => {
     let brands = await knex("brands").select("*");
-    return res.status(200).send(brands);
+    return res.status(200).json({data: brands,message: "brand fetched successfully"});
 }
 
 exports.getBrandById = async (req, res) => {

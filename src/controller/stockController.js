@@ -6,7 +6,7 @@ exports.getLowStocks = async(req,res) => {
                     .leftJoin("products as p","s.product_id","p.id")
                     .where("s.quantity","<",knex.ref("p.min_quantity"))
                     .select("p.id","p.name","s.quantity");
-    return res.status(200).send(lowStocks);             
+    return res.status(200).json({data: lowStocks,message: "stocks fetched successfully"});             
 }
 
 

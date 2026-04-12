@@ -118,7 +118,7 @@ exports.addSupplier = async (req, res) => {
 
 exports.getSupplier = async (req, res) => {
   let suppliers = await knex("suppliers").select("*");
-  return res.status(200).send(suppliers);
+  return res.status(200).json({data: suppliers,message: "suppliers fetched successfully"});
 };
 
 exports.getSupplierById = async (req, res) => {

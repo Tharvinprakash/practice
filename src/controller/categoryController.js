@@ -56,7 +56,7 @@ exports.addCategory = async (req, res) => {
 
 exports.getCategory = async (req, res) => {
     let categories = await knex("categories").select("*")
-    return res.send(categories);
+    return res.status(200).json({data: categories,message: "categories fetched successfully"});
 }
 
 exports.getCategoryById = async (req, res) => {
